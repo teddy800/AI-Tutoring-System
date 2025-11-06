@@ -1,0 +1,20 @@
+[
+    {
+        "user_id": "U001",
+        "username": "student1",
+        "password_hash": "hashed_password_123",
+        "user_type": "Student",
+        "points": 100,
+        "streak": 5,
+        "last_login": "2025-06-12T08:00:00Z"
+    },
+    {
+        "user_id": "U002",
+        "username": "tutor1",
+        "password_hash": "hashed_password_456",
+        "user_type": "Tutor",
+        "points": 50,
+        "streak": 0,
+        "last_login": "2025-06-11T15:00:00Z"
+    }
+]

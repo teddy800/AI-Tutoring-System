@@ -1,0 +1,16 @@
+[
+    {
+        "interaction_id": "I001",
+        "user_id": "U001",
+        "type": "Chat",
+        "details": {"query": "Explain Python variables", "response": "Variables store data..."},
+        "timestamp": "2025-06-12T09:00:00Z"
+    },
+    {
+        "interaction_id": "I002",
+        "user_id": "U001",
+        "type": "Quiz",
+        "details": {"quiz_id": "Q001", "score": 100, "time_spent": 45},
+        "timestamp": "2025-06-12T09:15:00Z"
+    }
+]

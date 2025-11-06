@@ -1,0 +1,18 @@
+[
+    {
+        "quiz_id": "Q001",
+        "course_id": "C001",
+        "question": "What is the output of `print(2 + 2)` in Python?",
+        "options": ["22", "4", "Error", "None"],
+        "correct_answer": 1,
+        "difficulty": "Easy"
+    },
+    {
+        "quiz_id": "Q002",
+        "course_id": "C002",
+        "question": "What is the derivative of x²?",
+        "options": ["2x", "x", "x²", "2"],
+        "correct_answer": 0,
+        "difficulty": "Medium"
+    }
+]

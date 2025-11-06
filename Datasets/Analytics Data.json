@@ -1,0 +1,23 @@
+[
+    {
+        "user_id": "U001",
+        "course_id": "C001",
+        "progress": 50,
+        "quiz_scores": [
+            {"quiz_id": "Q001", "score": 100},
+            {"quiz_id": "Q002", "score": 80}
+        ],
+        "time_spent": 3600,
+        "last_updated": "2025-06-12T11:00:00Z"
+    },
+    {
+        "user_id": "U001",
+        "course_id": "C002",
+        "progress": 75,
+        "quiz_scores": [
+            {"quiz_id": "Q002", "score": 90}
+        ],
+        "time_spent": 1800,
+        "last_updated": "2025-06-12T11:00:00Z"
+    }
+]

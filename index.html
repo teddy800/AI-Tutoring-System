@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Tutoring System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="particles-js"></div>
+    <button class="theme-toggle" aria-label="Toggle theme">🌗</button>
+    <button class="sidebar-toggle" aria-label="Toggle sidebar">
+        <span class="visually-hidden">Toggle Sidebar</span>
+        ☰
+    </button>
+    <div class="sidebar">
+        <h2>Navigation</h2>
+        <a href="#login-form">Login</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#chatbot">Chatbot</a>
+        <a href="#quiz-section">Quizzes</a>
+        <a href="#course-section">Courses</a>
+        <a href="#content-upload">Upload Content</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#feedback">Feedback</a>
+        <a href="#help">Help</a>
+    </div>
+    <header class="header">
+        <h1>AI-Powered Tutoring System</h1>
+    </header>
+    <nav class="nav">
+        <a href="#login-form">Login</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#chatbot">Chatbot</a>
+        <a href="#quiz-section">Quizzes</a>
+        <a href="#course-section">Courses</a>
+        <a href="#content-upload">Upload Content</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#feedback">Feedback</a>
+        <a href="#help">Help</a>
+    </nav>
+    <main class="container">
+        <section id="login-form" class="content login-form active">
+            <h2>Login</h2>
+            <form>
+                <label for="user-type">User Type</label>
+                <select id="user-type">
+                    <option value="student">Student</option>
+                    <option value="tutor">Tutor</option>
+                </select>
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+                <button type="submit">Login</button>
+            </form>
+        </section>
+        <section id="dashboard" class="content">
+            <h2>Learning Dashboard</h2>
+            <h3 id="welcome-message"></h3>
+            <div class="progress-tracker">
+                <div class="milestone" data-milestone="25">25%</div>
+                <div class="milestone" data-milestone="50">50%</div>
+                <div class="milestone" data-milestone="75">75%</div>
+                <div class="milestone" data-milestone="100">100%</div>
+            </div>
+            <div class="course-grid"></div>
+            <div id="recommendations"></div>
+            <div class="leaderboard">
+                <h3>Leaderboard</h3>
+                <ul>
+                    <li>User1: 100 points</li>
+                    <li>User2: 80 points</li>
+                    <li>User3: 60 points</li>
+                </ul>
+            </div>
+            <div class="badges">
+                <h3>Your Badges</h3>
+                <div class="badge" data-type="quiz-champion">Quiz Champion</div>
+                <div class="badge" data-type="active-learner">Active Learner</div>
+                <div class="badge" data-type="course-explorer">Course Explorer</div>
+            </div>
+            <div class="streak">
+                <p>Current Streak: 5 days</p>
+            </div>
+        </section>
+        <section id="chatbot" class="content">
+            <h2>AI Chatbot</h2>
+            <div class="chatbot" id="chat-container"></div>
+            <div class="chat-input-group">
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button class="voice-btn" aria-label="Voice input">🎤</button>
+                <button>Send</button>
+            </div>
+            <span class="user-status">Online</span>
+        </section>
+        <section id="quiz-section" class="content">
+            <h2>Quizzes</h2>
+            <form id="quiz-content">
+                <div class="quiz-timer">Time: <span id="timer">60</span>s</div>
+                <button type="submit">Submit Quiz</button>
+            </form>
+        </section>
+        <section id="course-section" class="content">
+            <h2>Courses</h2>
+            <div class="course-grid"></div>
+            <div id="course-details"></div>
+        </section>
+        <section id="content-upload" class="content">
+            <h2>Upload Content</h2>
+            <form id="content-upload">
+                <label for="content-title">Content Title</label>
+                <input type="text" id="content-title" required>
+                <label for="content-body">Content Description</label>
+                <textarea id="content-body" required></textarea>
+                <button type="button">Preview</button>
+                <button type="submit">Upload</button>
+                <div class="content-preview" id="content-preview"></div>
+            </form>
+        </section>
+        <section id="analytics" class="content">
+            <h2>Analytics</h2>
+            <canvas id="progress-chart"></canvas>
+        </section>
+        <section id="content-repo" class="content">
+            <h2>Educational Content Repository</h2>
+            <div class="content-item">Python Variables: Learn about variables in Python.</div>
+            <div class="content-item">Integration Basics: Understand integration techniques.</div>
+            <div class="content-item">HTML Basics: Introduction to web structure.</div>
+            <div class="content-item">Linked Lists: Concepts and implementation.</div>
+            <div class="content-item">Linear Regression: ML model fundamentals.</div>
+        </section>
+        <section id="feedback" class="content feedback">
+            <h2>User Feedback</h2>
+            <form>
+                <label for="feedback-type">Feedback Type</label>
+                <select id="feedback-type">
+                    <option value="bug">Report a Bug</option>
+                    <option value="feature">Suggest a Feature</option>
+                    <option value="general">General Feedback</option>
+                </select>
+                <label for="feedback-message">Message</label>
+                <textarea id="feedback-message" required></textarea>
+                <button type="submit">Submit Feedback</button>
+            </form>
+        </section>
+        <section id="help" class="content">
+            <h2>Help & Resources</h2>
+            <div class="help-content">
+                <h3>Frequently Asked Questions</h3>
+                <details>
+                    <summary>How do I reset my password?</summary>
+                    <p>Contact the administrator via the feedback form.</p>
+                </details>
+                <details>
+                    <summary>How to access course materials?</summary>
+                    <p>Navigate to the Courses section and select a course.</p>
+                </details>
+                <h3>Contact Support</h3>
+                <p>Email: support@tutoringsystem.com</p>
+                <p>Phone: +251-123-456-789</p>
+            </div>
+        </section>
+    </main>
+    <div id="modal" aria-hidden="true">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <button>Close</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

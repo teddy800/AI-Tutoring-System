@@ -1,0 +1,34 @@
+[
+    {
+        "course_id": "C001",
+        "title": "Introduction to Python",
+        "description": "Master Python programming fundamentals.",
+        "syllabus": ["Week 1: Variables", "Week 2: Functions", "Week 3: OOP"],
+        "assignments": [
+            {"title": "Calculator", "due_date": "2025-06-20"},
+            {"title": "File Parser", "due_date": "2025-06-27"}
+        ],
+        "forum_posts": [
+            {
+                "post_id": "P001",
+                "user": "student1",
+                "message": "How to debug loops in Python?",
+                "replies": [
+                    {"user": "tutor1", "message": "Use print statements to trace variables."}
+                ]
+            }
+        ],
+        "progress": 50
+    },
+    {
+        "course_id": "C002",
+        "title": "Calculus Fundamentals",
+        "description": "Learn derivatives and integrals.",
+        "syllabus": ["Week 1: Limits", "Week 2: Derivatives", "Week 3: Integrals"],
+        "assignments": [
+            {"title": "Derivatives Practice", "due_date": "2025-06-25"}
+        ],
+        "forum_posts": [],
+        "progress": 75
+    }
+]

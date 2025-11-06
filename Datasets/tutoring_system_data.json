@@ -1,0 +1,129 @@
+{
+    "users": [
+        {
+            "user_id": "U001",
+            "username": "student1",
+            "password_hash": "hashed_password_123",
+            "user_type": "Student",
+            "points": 100,
+            "streak": 5,
+            "last_login": "2025-06-12T08:00:00Z"
+        },
+        {
+            "user_id": "U002",
+            "username": "tutor1",
+            "password_hash": "hashed_password_456",
+            "user_type": "Tutor",
+            "points": 50,
+            "streak": 0,
+            "last_login": "2025-06-11T15:00:00Z"
+        }
+    ],
+    "courses": [
+        {
+            "course_id": "C001",
+            "title": "Introduction to Python",
+            "description": "Master Python programming fundamentals.",
+            "syllabus": ["Week 1: Variables", "Week 2: Functions", "Week 3: OOP"],
+            "assignments": [
+                {"title": "Calculator", "due_date": "2025-06-20"},
+                {"title": "File Parser", "due_date": "2025-06-27"}
+            ],
+            "forum_posts": [
+                {
+                    "post_id": "P001",
+                    "user": "student1",
+                    "message": "How to debug loops in Python?",
+                    "replies": [
+                        {"user": "tutor1", "message": "Use print statements to trace variables."}
+                    ]
+                }
+            ],
+            "progress": 50
+        },
+        {
+            "course_id": "C002",
+            "title": "Calculus Fundamentals",
+            "description": "Learn derivatives and integrals.",
+            "syllabus": ["Week 1: Limits", "Week 2: Derivatives", "Week 3: Integrals"],
+            "assignments": [
+                {"title": "Derivatives Practice", "due_date": "2025-06-25"}
+            ],
+            "forum_posts": [],
+            "progress": 75
+        }
+    ],
+    "quizzes": [
+        {
+            "quiz_id": "Q001",
+            "course_id": "C001",
+            "question": "What is the output of `print(2 + 2)` in Python?",
+            "options": ["22", "4", "Error", "None"],
+            "correct_answer": 1,
+            "difficulty": "Easy"
+        },
+        {
+            "quiz_id": "Q002",
+            "course_id": "C002",
+            "question": "What is the derivative of x²?",
+            "options": ["2x", "x", "x²", "2"],
+            "correct_answer": 0,
+            "difficulty": "Medium"
+        }
+    ],
+    "interactions": [
+        {
+            "interaction_id": "I001",
+            "user_id": "U001",
+            "type": "Chat",
+            "details": {"query": "Explain Python variables", "response": "Variables store data..."},
+            "timestamp": "2025-06-12T09:00:00Z"
+        },
+        {
+            "interaction_id": "I002",
+            "user_id": "U001",
+            "type": "Quiz",
+            "details": {"quiz_id": "Q001", "score": 100, "time_spent": 45},
+            "timestamp": "2025-06-12T09:15:00Z"
+        }
+    ],
+    "feedback": [
+        {
+            "feedback_id": "F001",
+            "user_id": "U001",
+            "type": "Feature",
+            "message": "Add video tutorials to courses.",
+            "timestamp": "2025-06-12T10:00:00Z"
+        },
+        {
+            "feedback_id": "F002",
+            "user_id": "Anonymous",
+            "type": "Bug",
+            "message": "Chatbot response delayed occasionally.",
+            "timestamp": "2025-06-12T10:30:00Z"
+        }
+    ],
+    "analytics": [
+        {
+            "user_id": "U001",
+            "course_id": "C001",
+            "progress": 50,
+            "quiz_scores": [
+                {"quiz_id": "Q001", "score": 100},
+                {"quiz_id": "Q002", "score": 80}
+            ],
+            "time_spent": 3600,
+            "last_updated": "2025-06-12T11:00:00Z"
+        },
+        {
+            "user_id": "U001",
+            "course_id": "C002",
+            "progress": 75,
+            "quiz_scores": [
+                {"quiz_id": "Q002", "score": 90}
+            ],
+            "time_spent": 1800,
+            "last_updated": "2025-06-12T11:00:00Z"
+        }
+    ]
+}
