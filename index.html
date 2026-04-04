@@ -105,7 +105,7 @@
   <!-- ── Main ────────────────────────────────────────────────────────────── -->
   <main class="main" id="main">
 
-    <!-- LOGIN ──────────────────────────────────────────────────────────── -->
+    <!-- LOGIN / SIGNUP ─────────────────────────────────────────────────── -->
     <section id="login-form" class="page page--login active" aria-labelledby="login-h">
       <div class="login-wrap">
         <div class="login-glow" aria-hidden="true"></div>
@@ -115,36 +115,102 @@
             <h2 id="login-h" class="login-hero__title">NeuralLearn</h2>
             <p class="login-hero__sub">Your AI-powered learning companion</p>
           </div>
-          <form id="login-form-el" class="login-form" novalidate>
-            <div class="role-picker" role="group" aria-label="Select your role">
-              <button type="button" class="role-pill active" data-role="student">🎓 Student</button>
-              <button type="button" class="role-pill" data-role="tutor">👨‍🏫 Tutor</button>
-            </div>
-            <select id="user-type" class="sr-only" aria-hidden="true">
-              <option value="student">Student</option>
-              <option value="tutor">Tutor</option>
-            </select>
-            <div class="field">
-              <label class="field__label" for="username">Username</label>
-              <div class="field__wrap">
-                <span class="field__icon">👤</span>
-                <input type="text" id="username" class="field__input" placeholder="Enter username" autocomplete="username" required />
+
+          <!-- Tab switcher -->
+          <div class="auth-tabs" role="tablist">
+            <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="panel-login">Sign In</button>
+            <button class="auth-tab" id="tab-signup" role="tab" aria-selected="false" aria-controls="panel-signup">Create Account</button>
+          </div>
+
+          <!-- LOGIN PANEL -->
+          <div id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+            <form id="login-form-el" class="login-form" novalidate>
+              <div class="role-picker" role="group" aria-label="Select your role">
+                <button type="button" class="role-pill active" data-role="student">🎓 Student</button>
+                <button type="button" class="role-pill" data-role="tutor">�‍🏫 Tutor</button>
               </div>
-            </div>
-            <div class="field">
-              <label class="field__label" for="password">Password</label>
-              <div class="field__wrap">
-                <span class="field__icon">🔒</span>
-                <input type="password" id="password" class="field__input" placeholder="Enter password" autocomplete="current-password" required />
-                <button type="button" class="field__eye" aria-label="Toggle password">👁</button>
+              <select id="user-type" class="sr-only" aria-hidden="true">
+                <option value="student">Student</option>
+                <option value="tutor">Tutor</option>
+              </select>
+              <div class="field">
+                <label class="field__label" for="username">Username</label>
+                <div class="field__wrap">
+                  <span class="field__icon">�</span>
+                  <input type="text" id="username" class="field__input" placeholder="Enter username" autocomplete="username" required />
+                </div>
               </div>
-            </div>
-            <button type="submit" class="btn btn--primary btn--full btn--lg">
-              <span class="btn__text">Sign In →</span>
-              <span class="btn__spin" hidden>⏳</span>
-            </button>
-          </form>
-          <p class="login-hint">Demo: any username + password</p>
+              <div class="field">
+                <label class="field__label" for="password">Password</label>
+                <div class="field__wrap">
+                  <span class="field__icon">🔒</span>
+                  <input type="password" id="password" class="field__input" placeholder="Enter password" autocomplete="current-password" required />
+                  <button type="button" class="field__eye" aria-label="Toggle password">👁</button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn--primary btn--full btn--lg">
+                <span class="btn__text">Sign In →</span>
+                <span class="btn__spin" hidden>⏳</span>
+              </button>
+            </form>
+            <p class="login-hint">No account? Click <strong>Create Account</strong> above.</p>
+          </div>
+
+          <!-- SIGNUP PANEL -->
+          <div id="panel-signup" role="tabpanel" aria-labelledby="tab-signup" hidden>
+            <form id="signup-form-el" class="login-form" novalidate>
+              <div class="role-picker" role="group" aria-label="Select your role">
+                <button type="button" class="role-pill active" data-role="student">🎓 Student</button>
+                <button type="button" class="role-pill" data-role="tutor">👨‍🏫 Tutor</button>
+              </div>
+              <select id="signup-user-type" class="sr-only" aria-hidden="true">
+                <option value="student">Student</option>
+                <option value="tutor">Tutor</option>
+              </select>
+              <div class="field">
+                <label class="field__label" for="signup-fullname">Full Name</label>
+                <div class="field__wrap">
+                  <span class="field__icon">✏️</span>
+                  <input type="text" id="signup-fullname" class="field__input" placeholder="Your full name" autocomplete="name" required />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field__label" for="signup-username">Username</label>
+                <div class="field__wrap">
+                  <span class="field__icon">👤</span>
+                  <input type="text" id="signup-username" class="field__input" placeholder="Choose a username" autocomplete="username" required />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field__label" for="signup-email">Email</label>
+                <div class="field__wrap">
+                  <span class="field__icon">📧</span>
+                  <input type="email" id="signup-email" class="field__input" placeholder="your@email.com" autocomplete="email" required />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field__label" for="signup-password">Password</label>
+                <div class="field__wrap">
+                  <span class="field__icon">🔒</span>
+                  <input type="password" id="signup-password" class="field__input" placeholder="Min. 6 characters" autocomplete="new-password" required minlength="6" />
+                  <button type="button" class="field__eye" data-target="signup-password" aria-label="Toggle password">👁</button>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field__label" for="signup-confirm">Confirm Password</label>
+                <div class="field__wrap">
+                  <span class="field__icon">🔒</span>
+                  <input type="password" id="signup-confirm" class="field__input" placeholder="Repeat password" autocomplete="new-password" required />
+                </div>
+              </div>
+              <button type="submit" class="btn btn--primary btn--full btn--lg">
+                <span class="btn__text">Create Account ✨</span>
+                <span class="btn__spin" hidden>⏳</span>
+              </button>
+            </form>
+            <p class="login-hint">Already have an account? Click <strong>Sign In</strong> above.</p>
+          </div>
+
         </div>
       </div>
     </section>

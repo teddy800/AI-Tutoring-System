@@ -77,6 +77,10 @@ switch ($action) {
         handleLogin($db);
         break;
 
+    case 'signup':
+        handleSignup($db);
+        break;
+
     case 'upload-content':
         handleUploadContent($db);
         break;
