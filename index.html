@@ -3,321 +3,308 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="AI-Powered Tutoring System — next-generation adaptive learning platform" />
-  <title>NeuralLearn · AI Tutoring System</title>
-
-  <!-- Google Fonts -->
+  <meta name="description" content="NeuralLearn — Next-generation AI-powered adaptive tutoring platform" />
+  <title>NeuralLearn · AI Tutoring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-
-  <!-- Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/font/lucide.min.css" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ── Ambient background ─────────────────────────────────────────────── -->
+  <!-- ── Ambient layers ──────────────────────────────────────────────────── -->
   <div id="particles-js" aria-hidden="true"></div>
   <div class="aurora" aria-hidden="true">
-    <div class="aurora__layer aurora__layer--1"></div>
-    <div class="aurora__layer aurora__layer--2"></div>
-    <div class="aurora__layer aurora__layer--3"></div>
+    <div class="aurora__orb aurora__orb--1"></div>
+    <div class="aurora__orb aurora__orb--2"></div>
+    <div class="aurora__orb aurora__orb--3"></div>
+    <div class="aurora__orb aurora__orb--4"></div>
   </div>
+  <div class="grid-overlay" aria-hidden="true"></div>
 
-  <!-- ── Floating controls ──────────────────────────────────────────────── -->
-  <div class="floating-controls" role="toolbar" aria-label="Quick controls">
-    <button class="ctrl-btn theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-      <span class="icon">🌗</span>
-    </button>
-    <button class="ctrl-btn sidebar-toggle" aria-label="Toggle navigation" title="Menu">
-      <span class="icon">☰</span>
-    </button>
-    <div class="online-indicator" id="online-indicator" title="Connection status">
-      <span class="dot"></span>
-      <span class="label">Online</span>
+  <!-- ── Floating HUD ────────────────────────────────────────────────────── -->
+  <div class="hud" role="toolbar" aria-label="Quick controls">
+    <button class="hud__btn theme-toggle" aria-label="Toggle theme" title="Toggle theme">🌗</button>
+    <button class="hud__btn sidebar-toggle" aria-label="Open navigation" title="Menu">☰</button>
+    <div class="hud__status" id="online-indicator">
+      <span class="status-dot"></span>
+      <span class="status-label">Online</span>
     </div>
   </div>
 
-  <!-- ── Sidebar ────────────────────────────────────────────────────────── -->
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <div class="sidebar-overlay" aria-hidden="true"></div>
   <aside class="sidebar" role="navigation" aria-label="Main navigation">
-    <div class="sidebar__header">
-      <div class="sidebar__logo">
-        <span class="logo-icon">⚡</span>
-        <span class="logo-text">NeuralLearn</span>
+    <div class="sidebar__top">
+      <div class="sidebar__brand">
+        <div class="sidebar__brand-icon">⚡</div>
+        <span class="sidebar__brand-name">NeuralLearn</span>
       </div>
       <button class="sidebar__close" aria-label="Close navigation">✕</button>
     </div>
 
-    <div class="sidebar__user" id="sidebar-user" hidden>
-      <div class="avatar" id="sidebar-avatar">?</div>
-      <div class="sidebar__user-info">
-        <span class="sidebar__username" id="sidebar-username">—</span>
-        <span class="sidebar__role" id="sidebar-role">—</span>
+    <div class="sidebar__profile" id="sidebar-profile" hidden>
+      <div class="profile-avatar" id="sidebar-avatar">?</div>
+      <div class="profile-info">
+        <span class="profile-name" id="sidebar-username">—</span>
+        <span class="profile-role" id="sidebar-role">—</span>
+      </div>
+      <div class="profile-pts">
+        <span class="profile-pts__val" id="sidebar-points-val">0</span>
+        <span class="profile-pts__lbl">pts</span>
       </div>
     </div>
 
     <nav class="sidebar__nav">
-      <a href="#login-form"           class="nav-item" data-icon="🔑">Login</a>
-      <a href="#dashboard"            class="nav-item" data-icon="🏠">Dashboard</a>
-      <a href="#chatbot"              class="nav-item" data-icon="🤖">AI Chatbot</a>
-      <a href="#quiz-section"         class="nav-item" data-icon="📝">Quizzes</a>
-      <a href="#course-section"       class="nav-item" data-icon="📚">Courses</a>
-      <a href="#content-upload-section" class="nav-item" data-icon="⬆️">Upload</a>
-      <a href="#analytics"            class="nav-item" data-icon="📊">Analytics</a>
-      <a href="#content-repo"         class="nav-item" data-icon="🗂️">Repository</a>
-      <a href="#feedback"             class="nav-item" data-icon="💬">Feedback</a>
-      <a href="#help"                 class="nav-item" data-icon="❓">Help</a>
+      <a href="#login-form"             class="snav-item" data-icon="🔑" data-section="login-form">Login</a>
+      <a href="#dashboard"              class="snav-item" data-icon="🏠" data-section="dashboard">Dashboard</a>
+      <a href="#chatbot"                class="snav-item" data-icon="🤖" data-section="chatbot">AI Chatbot</a>
+      <a href="#quiz-section"           class="snav-item" data-icon="📝" data-section="quiz-section">Quizzes</a>
+      <a href="#course-section"         class="snav-item" data-icon="📚" data-section="course-section">Courses</a>
+      <a href="#content-upload-section" class="snav-item" data-icon="⬆️" data-section="content-upload-section">Upload</a>
+      <a href="#analytics"              class="snav-item" data-icon="📊" data-section="analytics">Analytics</a>
+      <a href="#content-repo"           class="snav-item" data-icon="🗂️" data-section="content-repo">Repository</a>
+      <a href="#feedback"               class="snav-item" data-icon="💬" data-section="feedback">Feedback</a>
+      <a href="#help"                   class="snav-item" data-icon="❓" data-section="help">Help</a>
     </nav>
 
-    <div class="sidebar__footer">
-      <div class="sidebar__points" id="sidebar-points">
-        <span class="points-icon">⭐</span>
-        <span id="sidebar-points-val">0</span> pts
+    <div class="sidebar__xp-bar">
+      <div class="xp-label">
+        <span>Level <span id="sidebar-level">1</span></span>
+        <span id="sidebar-xp-text">0 / 100 XP</span>
       </div>
+      <div class="xp-track"><div class="xp-fill" id="sidebar-xp-fill"></div></div>
     </div>
   </aside>
-  <div class="sidebar-overlay" aria-hidden="true"></div>
 
-  <!-- ── Top header ─────────────────────────────────────────────────────── -->
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
   <header class="header" role="banner">
     <div class="header__inner">
       <div class="header__brand">
-        <span class="brand-icon">⚡</span>
-        <h1 class="brand-name">NeuralLearn</h1>
-        <span class="brand-tagline">AI-Powered Tutoring</span>
+        <span class="header__logo">⚡</span>
+        <div>
+          <h1 class="header__name">NeuralLearn</h1>
+          <span class="header__tagline">AI-Powered Tutoring</span>
+        </div>
       </div>
       <nav class="topnav" aria-label="Top navigation">
-        <a href="#login-form"             class="topnav__link" data-section="login-form">Login</a>
-        <a href="#dashboard"              class="topnav__link" data-section="dashboard">Dashboard</a>
-        <a href="#chatbot"                class="topnav__link" data-section="chatbot">Chatbot</a>
-        <a href="#quiz-section"           class="topnav__link" data-section="quiz-section">Quizzes</a>
-        <a href="#course-section"         class="topnav__link" data-section="course-section">Courses</a>
-        <a href="#content-upload-section" class="topnav__link" data-section="content-upload-section">Upload</a>
-        <a href="#analytics"              class="topnav__link" data-section="analytics">Analytics</a>
-        <a href="#content-repo"           class="topnav__link" data-section="content-repo">Repo</a>
-        <a href="#feedback"               class="topnav__link" data-section="feedback">Feedback</a>
-        <a href="#help"                   class="topnav__link" data-section="help">Help</a>
+        <a href="#login-form"             class="tnav-link" data-section="login-form">Login</a>
+        <a href="#dashboard"              class="tnav-link" data-section="dashboard">Dashboard</a>
+        <a href="#chatbot"                class="tnav-link" data-section="chatbot">Chatbot</a>
+        <a href="#quiz-section"           class="tnav-link" data-section="quiz-section">Quizzes</a>
+        <a href="#course-section"         class="tnav-link" data-section="course-section">Courses</a>
+        <a href="#content-upload-section" class="tnav-link" data-section="content-upload-section">Upload</a>
+        <a href="#analytics"              class="tnav-link" data-section="analytics">Analytics</a>
+        <a href="#content-repo"           class="tnav-link" data-section="content-repo">Repo</a>
+        <a href="#feedback"               class="tnav-link" data-section="feedback">Feedback</a>
+        <a href="#help"                   class="tnav-link" data-section="help">Help</a>
       </nav>
     </div>
   </header>
 
-  <!-- ── Main content ───────────────────────────────────────────────────── -->
-  <main class="main-content" id="main-content">
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main class="main" id="main">
 
     <!-- LOGIN ──────────────────────────────────────────────────────────── -->
-    <section id="login-form" class="section section--login active" aria-labelledby="login-title">
-      <div class="login-card">
-        <div class="login-card__glow" aria-hidden="true"></div>
-        <div class="login-card__body">
-          <div class="login-logo">
-            <span class="login-logo__icon">⚡</span>
-            <h2 id="login-title" class="login-logo__name">NeuralLearn</h2>
-            <p class="login-logo__sub">Sign in to continue learning</p>
+    <section id="login-form" class="page page--login active" aria-labelledby="login-h">
+      <div class="login-wrap">
+        <div class="login-glow" aria-hidden="true"></div>
+        <div class="login-card">
+          <div class="login-hero">
+            <div class="login-hero__icon">⚡</div>
+            <h2 id="login-h" class="login-hero__title">NeuralLearn</h2>
+            <p class="login-hero__sub">Your AI-powered learning companion</p>
           </div>
-          <form class="login-form__form" id="login-form-el" novalidate>
-            <div class="field-group">
-              <label class="field-label" for="user-type">I am a</label>
-              <div class="role-toggle" role="group" aria-label="Select role">
-                <button type="button" class="role-btn active" data-role="student">🎓 Student</button>
-                <button type="button" class="role-btn" data-role="tutor">👨‍🏫 Tutor</button>
-              </div>
-              <select id="user-type" class="visually-hidden" aria-hidden="true">
-                <option value="student">Student</option>
-                <option value="tutor">Tutor</option>
-              </select>
+          <form id="login-form-el" class="login-form" novalidate>
+            <div class="role-picker" role="group" aria-label="Select your role">
+              <button type="button" class="role-pill active" data-role="student">🎓 Student</button>
+              <button type="button" class="role-pill" data-role="tutor">👨‍🏫 Tutor</button>
             </div>
-            <div class="field-group">
-              <label class="field-label" for="username">Username</label>
-              <div class="input-wrap">
-                <span class="input-icon">👤</span>
-                <input type="text" id="username" class="field-input" placeholder="Enter your username" autocomplete="username" required />
+            <select id="user-type" class="sr-only" aria-hidden="true">
+              <option value="student">Student</option>
+              <option value="tutor">Tutor</option>
+            </select>
+            <div class="field">
+              <label class="field__label" for="username">Username</label>
+              <div class="field__wrap">
+                <span class="field__icon">👤</span>
+                <input type="text" id="username" class="field__input" placeholder="Enter username" autocomplete="username" required />
               </div>
             </div>
-            <div class="field-group">
-              <label class="field-label" for="password">Password</label>
-              <div class="input-wrap">
-                <span class="input-icon">🔒</span>
-                <input type="password" id="password" class="field-input" placeholder="Enter your password" autocomplete="current-password" required />
-                <button type="button" class="toggle-pw" aria-label="Toggle password visibility">👁</button>
+            <div class="field">
+              <label class="field__label" for="password">Password</label>
+              <div class="field__wrap">
+                <span class="field__icon">🔒</span>
+                <input type="password" id="password" class="field__input" placeholder="Enter password" autocomplete="current-password" required />
+                <button type="button" class="field__eye" aria-label="Toggle password">👁</button>
               </div>
             </div>
-            <button type="submit" class="btn btn--primary btn--full">
-              <span class="btn__text">Sign In</span>
-              <span class="btn__loader" hidden>⏳</span>
+            <button type="submit" class="btn btn--primary btn--full btn--lg">
+              <span class="btn__text">Sign In →</span>
+              <span class="btn__spin" hidden>⏳</span>
             </button>
           </form>
+          <p class="login-hint">Demo: any username + password</p>
         </div>
       </div>
     </section>
 
     <!-- DASHBOARD ──────────────────────────────────────────────────────── -->
-    <section id="dashboard" class="section" aria-labelledby="dashboard-title">
-      <div class="section__header">
-        <h2 id="dashboard-title" class="section__title">Dashboard</h2>
-        <p id="welcome-message" class="section__subtitle" aria-live="polite"></p>
-      </div>
-
-      <!-- Stats row -->
-      <div class="stats-grid" role="list">
-        <div class="stat-card" role="listitem">
-          <div class="stat-card__icon">⭐</div>
-          <div class="stat-card__body">
-            <span class="stat-card__value" id="stat-points">0</span>
-            <span class="stat-card__label">Total Points</span>
-          </div>
+    <section id="dashboard" class="page" aria-labelledby="dash-h">
+      <div class="page-header">
+        <div>
+          <h2 id="dash-h" class="page-title">Dashboard</h2>
+          <p id="welcome-message" class="page-sub" aria-live="polite"></p>
         </div>
-        <div class="stat-card" role="listitem">
-          <div class="stat-card__icon">🔥</div>
-          <div class="stat-card__body">
-            <span class="stat-card__value" id="stat-streak">0</span>
-            <span class="stat-card__label">Day Streak</span>
-          </div>
-        </div>
-        <div class="stat-card" role="listitem">
-          <div class="stat-card__icon">📚</div>
-          <div class="stat-card__body">
-            <span class="stat-card__value" id="stat-courses">0</span>
-            <span class="stat-card__label">Courses</span>
-          </div>
-        </div>
-        <div class="stat-card" role="listitem">
-          <div class="stat-card__icon">🏅</div>
-          <div class="stat-card__body">
-            <span class="stat-card__value" id="stat-badges">0</span>
-            <span class="stat-card__label">Badges</span>
-          </div>
+        <div class="page-header__actions">
+          <button class="btn btn--ghost btn--sm" onclick="showSection('chatbot')">Ask AI 🤖</button>
         </div>
       </div>
 
-      <!-- Progress tracker -->
-      <div class="progress-section">
-        <h3 class="subsection-title">Overall Progress</h3>
-        <div class="progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Overall learning progress">
-          <div class="progress-track__fill" id="overall-progress-fill"></div>
-          <span class="progress-track__label" id="overall-progress-label">0%</span>
+      <div class="kpi-row" role="list">
+        <div class="kpi" role="listitem"><div class="kpi__icon">⭐</div><div><span class="kpi__val" id="stat-points">0</span><span class="kpi__lbl">Points</span></div></div>
+        <div class="kpi" role="listitem"><div class="kpi__icon">🔥</div><div><span class="kpi__val" id="stat-streak">0</span><span class="kpi__lbl">Day Streak</span></div></div>
+        <div class="kpi" role="listitem"><div class="kpi__icon">📚</div><div><span class="kpi__val" id="stat-courses">0</span><span class="kpi__lbl">Courses</span></div></div>
+        <div class="kpi" role="listitem"><div class="kpi__icon">🏅</div><div><span class="kpi__val" id="stat-badges">0</span><span class="kpi__lbl">Badges</span></div></div>
+        <div class="kpi" role="listitem"><div class="kpi__icon">📈</div><div><span class="kpi__val" id="stat-level">1</span><span class="kpi__lbl">Level</span></div></div>
+      </div>
+
+      <div class="progress-hero">
+        <div class="progress-hero__header">
+          <span class="progress-hero__label">Overall Progress</span>
+          <span class="progress-hero__pct" id="overall-pct">0%</span>
         </div>
-        <div class="milestones" aria-label="Progress milestones">
-          <div class="milestone" data-milestone="25">25%</div>
-          <div class="milestone" data-milestone="50">50%</div>
-          <div class="milestone" data-milestone="75">75%</div>
-          <div class="milestone" data-milestone="100">100%</div>
+        <div class="progress-hero__track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-track">
+          <div class="progress-hero__fill" id="overall-fill"></div>
+          <div class="progress-hero__glow" id="overall-glow"></div>
+        </div>
+        <div class="milestones">
+          <div class="ms" data-milestone="25">25%</div>
+          <div class="ms" data-milestone="50">50%</div>
+          <div class="ms" data-milestone="75">75%</div>
+          <div class="ms" data-milestone="100">100%</div>
         </div>
       </div>
 
-      <!-- Course cards -->
-      <h3 class="subsection-title">Your Courses</h3>
-      <div class="course-grid" id="dashboard-course-grid" role="grid" aria-label="Enrolled courses"></div>
+      <h3 class="section-label">Your Courses</h3>
+      <div class="course-grid" id="dashboard-course-grid" role="grid"></div>
 
-      <!-- Recommendations -->
-      <div class="recommendations" id="recommendations" aria-live="polite"></div>
+      <div id="recommendations" class="reco-bar" aria-live="polite"></div>
 
-      <!-- Bottom row: leaderboard + badges + streak -->
-      <div class="dashboard-bottom">
-        <div class="leaderboard card" aria-labelledby="lb-title">
-          <h3 id="lb-title" class="card__title">🏆 Leaderboard</h3>
-          <ol class="leaderboard__list" id="leaderboard-list"></ol>
+      <div class="dash-bottom">
+        <div class="glass-card" aria-labelledby="lb-h">
+          <h3 id="lb-h" class="glass-card__title">🏆 Leaderboard</h3>
+          <ol class="lb-list" id="leaderboard-list"></ol>
         </div>
-        <div class="badges-panel card" aria-labelledby="badges-title">
-          <h3 id="badges-title" class="card__title">🏅 Your Badges</h3>
-          <div class="badges" id="badges-container">
-            <div class="badge" data-type="quiz-champion">Quiz Champion</div>
-            <div class="badge" data-type="active-learner">Active Learner</div>
-            <div class="badge" data-type="course-explorer">Course Explorer</div>
+        <div class="glass-card" aria-labelledby="badges-h">
+          <h3 id="badges-h" class="glass-card__title">🏅 Badges</h3>
+          <div class="badges-wrap" id="badges-container">
+            <span class="badge" data-type="quiz-champion">Quiz Champion</span>
+            <span class="badge" data-type="active-learner">Active Learner</span>
+            <span class="badge" data-type="course-explorer">Course Explorer</span>
           </div>
         </div>
-        <div class="streak-card card">
-          <div class="streak-flame" aria-hidden="true">🔥</div>
-          <p class="streak-text" id="streak-display">0 day streak</p>
-          <p class="streak-sub">Keep it up!</p>
+        <div class="glass-card streak-card">
+          <div class="streak-flame">🔥</div>
+          <p class="streak-val" id="streak-display">0 day streak</p>
+          <p class="streak-sub">Keep the momentum!</p>
         </div>
       </div>
     </section>
 
     <!-- CHATBOT ─────────────────────────────────────────────────────────── -->
-    <section id="chatbot" class="section" aria-labelledby="chatbot-title">
-      <div class="section__header">
-        <h2 id="chatbot-title" class="section__title">🤖 AI Chatbot</h2>
-        <span class="user-status" id="user-status" aria-live="polite">Online</span>
+    <section id="chatbot" class="page" aria-labelledby="chat-h">
+      <div class="page-header">
+        <div>
+          <h2 id="chat-h" class="page-title">🤖 AI Tutor</h2>
+          <p class="page-sub">Ask anything about your courses</p>
+        </div>
+        <span class="online-badge" id="user-status" aria-live="polite">● Online</span>
       </div>
-      <div class="chat-window">
-        <div class="chat-messages" id="chat-container" role="log" aria-live="polite" aria-label="Chat messages">
-          <div class="chat-msg chat-msg--ai">
-            <div class="chat-msg__avatar">🤖</div>
-            <div class="chat-msg__bubble">
-              Hello! I'm your AI tutor. Ask me anything about your courses, quizzes, or learning topics! 🎓
-            </div>
+      <div class="chat-shell">
+        <div class="chat-msgs" id="chat-container" role="log" aria-live="polite" aria-label="Chat messages">
+          <div class="msg msg--ai">
+            <div class="msg__av">🤖</div>
+            <div class="msg__bubble">Hello! I'm your AI tutor. Ask me anything about Python, Calculus, Web Dev, or any topic you're studying! 🎓</div>
           </div>
         </div>
-        <div class="chat-toolbar">
-          <div class="chat-suggestions" id="chat-suggestions" aria-label="Quick suggestions">
-            <button class="suggestion-chip" data-msg="What is Python?">What is Python?</button>
-            <button class="suggestion-chip" data-msg="Explain derivatives">Explain derivatives</button>
-            <button class="suggestion-chip" data-msg="Help me with HTML">Help with HTML</button>
-          </div>
+        <div class="chat-chips" id="chat-suggestions">
+          <button class="chip" data-msg="What is Python?">What is Python?</button>
+          <button class="chip" data-msg="Explain derivatives">Explain derivatives</button>
+          <button class="chip" data-msg="How does HTML work?">How does HTML work?</button>
+          <button class="chip" data-msg="What is machine learning?">What is ML?</button>
         </div>
-        <div class="chat-input-row">
-          <button class="ctrl-btn voice-btn" aria-label="Voice input" title="Voice input">🎤</button>
-          <input type="text" id="chat-input" class="chat-input" placeholder="Ask your AI tutor anything…" autocomplete="off" aria-label="Chat message input" />
-          <button class="btn btn--primary" id="send-btn" aria-label="Send message">Send ➤</button>
+        <div class="chat-bar">
+          <button class="hud__btn voice-btn" aria-label="Voice input" title="Voice input">🎤</button>
+          <input type="text" id="chat-input" class="chat-input" placeholder="Ask your AI tutor…" autocomplete="off" aria-label="Chat message" />
+          <button class="btn btn--primary" id="send-btn">Send ➤</button>
         </div>
       </div>
     </section>
 
     <!-- QUIZZES ─────────────────────────────────────────────────────────── -->
-    <section id="quiz-section" class="section" aria-labelledby="quiz-title">
-      <div class="section__header">
-        <h2 id="quiz-title" class="section__title">📝 Quizzes</h2>
-        <div class="quiz-meta">
-          <div class="quiz-timer-display" id="quiz-timer-display" aria-live="assertive" aria-label="Time remaining">
-            <span class="timer-icon">⏱</span>
-            <span id="timer">60</span>s
+    <section id="quiz-section" class="page" aria-labelledby="quiz-h">
+      <div class="page-header">
+        <div>
+          <h2 id="quiz-h" class="page-title">📝 Quizzes</h2>
+          <p class="page-sub">Test your knowledge</p>
+        </div>
+        <div class="quiz-hud">
+          <div class="timer-ring" id="timer-ring" aria-live="assertive" aria-label="Time remaining">
+            <svg viewBox="0 0 44 44" class="timer-svg">
+              <circle class="timer-bg" cx="22" cy="22" r="18"/>
+              <circle class="timer-arc" id="timer-arc" cx="22" cy="22" r="18"/>
+            </svg>
+            <span class="timer-val" id="timer">60</span>
           </div>
-          <div class="quiz-score-display" id="quiz-score-display" hidden>
+          <div class="quiz-score-badge" id="quiz-score-badge" hidden>
             Score: <strong id="quiz-score-val">—</strong>
           </div>
         </div>
       </div>
       <form id="quiz-content" novalidate>
         <div id="quiz-questions"></div>
-        <div class="quiz-actions">
+        <div class="quiz-footer">
           <button type="submit" class="btn btn--primary btn--lg">Submit Quiz ✓</button>
         </div>
       </form>
     </section>
 
     <!-- COURSES ─────────────────────────────────────────────────────────── -->
-    <section id="course-section" class="section" aria-labelledby="courses-title">
-      <div class="section__header">
-        <h2 id="courses-title" class="section__title">📚 Courses</h2>
-        <div class="search-wrap">
-          <input type="search" id="course-search" class="field-input" placeholder="Search courses…" aria-label="Search courses" />
+    <section id="course-section" class="page" aria-labelledby="courses-h">
+      <div class="page-header">
+        <div>
+          <h2 id="courses-h" class="page-title">📚 Courses</h2>
+          <p class="page-sub">Explore your learning path</p>
         </div>
+        <input type="search" id="course-search" class="search-input" placeholder="Search courses…" aria-label="Search courses" />
       </div>
-      <div class="course-grid" id="course-grid" role="grid" aria-label="Available courses"></div>
-      <div id="course-details" class="course-details-panel"></div>
+      <div class="course-grid" id="course-grid" role="grid"></div>
+      <div id="course-details" class="course-details"></div>
     </section>
 
     <!-- UPLOAD ──────────────────────────────────────────────────────────── -->
-    <section id="content-upload-section" class="section" aria-labelledby="upload-title">
-      <div class="section__header">
-        <h2 id="upload-title" class="section__title">⬆️ Upload Content</h2>
+    <section id="content-upload-section" class="page" aria-labelledby="upload-h">
+      <div class="page-header">
+        <h2 id="upload-h" class="page-title">⬆️ Upload Content</h2>
       </div>
-      <div class="upload-layout">
+      <div class="upload-grid">
         <form id="content-upload-form" class="upload-form" novalidate>
-          <div class="dropzone" id="dropzone" role="region" aria-label="File drop zone">
-            <span class="dropzone__icon">📂</span>
-            <p class="dropzone__text">Drop a <code>.txt</code> file here or click to browse</p>
-            <input type="file" id="file-input" accept=".txt" class="visually-hidden" aria-label="Upload file" />
+          <div class="dropzone" id="dropzone" role="region" aria-label="File drop zone" tabindex="0">
+            <div class="dropzone__inner">
+              <span class="dropzone__icon">📂</span>
+              <p class="dropzone__title">Drop a <code>.txt</code> file here</p>
+              <p class="dropzone__sub">or click to browse</p>
+            </div>
+            <input type="file" id="file-input" accept=".txt" class="sr-only" aria-label="Upload file" />
           </div>
-          <div class="field-group">
-            <label class="field-label" for="content-title">Content Title</label>
-            <input type="text" id="content-title" class="field-input" placeholder="Enter a descriptive title" required />
+          <div class="field">
+            <label class="field__label" for="content-title">Title</label>
+            <input type="text" id="content-title" class="field__input" placeholder="Descriptive title…" required />
           </div>
-          <div class="field-group">
-            <label class="field-label" for="content-body">Content Body</label>
-            <textarea id="content-body" class="field-input" rows="6" placeholder="Paste or type your content here…" required></textarea>
+          <div class="field">
+            <label class="field__label" for="content-body">Content</label>
+            <textarea id="content-body" class="field__input field__textarea" rows="7" placeholder="Paste or type content…" required></textarea>
             <span class="char-count" id="char-count">0 characters</span>
           </div>
           <div class="upload-actions">
@@ -325,73 +312,84 @@
             <button type="submit" id="upload-btn" class="btn btn--primary">⬆️ Upload</button>
           </div>
         </form>
-        <div class="content-preview card" id="content-preview" hidden>
-          <h4 class="card__title">Preview</h4>
-          <div id="content-preview-body"></div>
+        <div class="glass-card" id="content-preview" hidden>
+          <h4 class="glass-card__title">Preview</h4>
+          <div id="content-preview-body" class="preview-body"></div>
         </div>
       </div>
     </section>
 
     <!-- ANALYTICS ───────────────────────────────────────────────────────── -->
-    <section id="analytics" class="section" aria-labelledby="analytics-title">
-      <div class="section__header">
-        <h2 id="analytics-title" class="section__title">📊 Analytics</h2>
-        <div class="chart-controls">
+    <section id="analytics" class="page" aria-labelledby="analytics-h">
+      <div class="page-header">
+        <div>
+          <h2 id="analytics-h" class="page-title">📊 Analytics</h2>
+          <p class="page-sub">Student performance insights</p>
+        </div>
+        <div class="chart-switcher">
           <button class="btn btn--ghost btn--sm chart-type-btn active" data-type="bar">Bar</button>
           <button class="btn btn--ghost btn--sm chart-type-btn" data-type="line">Line</button>
           <button class="btn btn--ghost btn--sm chart-type-btn" data-type="radar">Radar</button>
+          <button class="btn btn--ghost btn--sm chart-type-btn" data-type="doughnut">Donut</button>
         </div>
       </div>
-      <div class="analytics-grid">
-        <div class="chart-card card">
-          <h3 class="card__title">Student Progress</h3>
-          <div class="chart-wrap">
-            <canvas id="progress-chart" aria-label="Student progress chart"></canvas>
-          </div>
+      <div class="analytics-layout">
+        <div class="glass-card chart-card">
+          <h3 class="glass-card__title">Student Progress</h3>
+          <div class="chart-box"><canvas id="progress-chart" aria-label="Student progress chart"></canvas></div>
         </div>
-        <div class="analytics-stats card">
-          <h3 class="card__title">Quick Stats</h3>
-          <div class="analytics-stat-list" id="analytics-stat-list"></div>
+        <div class="analytics-side">
+          <div class="glass-card">
+            <h3 class="glass-card__title">Quick Stats</h3>
+            <div id="analytics-stat-list" class="stat-list"></div>
+          </div>
+          <div class="glass-card">
+            <h3 class="glass-card__title">Activity Heatmap</h3>
+            <div id="heatmap" class="heatmap"></div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- REPOSITORY ──────────────────────────────────────────────────────── -->
-    <section id="content-repo" class="section" aria-labelledby="repo-title">
-      <div class="section__header">
-        <h2 id="repo-title" class="section__title">🗂️ Content Repository</h2>
-        <input type="search" id="repo-search" class="field-input" placeholder="Search repository…" aria-label="Search repository" />
+    <section id="content-repo" class="page" aria-labelledby="repo-h">
+      <div class="page-header">
+        <div>
+          <h2 id="repo-h" class="page-title">🗂️ Repository</h2>
+          <p class="page-sub">Educational content library</p>
+        </div>
+        <input type="search" id="repo-search" class="search-input" placeholder="Search content…" aria-label="Search repository" />
       </div>
-      <div class="repo-grid" id="repo-grid" role="list" aria-label="Educational content"></div>
+      <div class="repo-grid" id="repo-grid" role="list"></div>
     </section>
 
     <!-- FEEDBACK ────────────────────────────────────────────────────────── -->
-    <section id="feedback" class="section" aria-labelledby="feedback-title">
-      <div class="section__header">
-        <h2 id="feedback-title" class="section__title">💬 Feedback</h2>
+    <section id="feedback" class="page" aria-labelledby="feedback-h">
+      <div class="page-header">
+        <h2 id="feedback-h" class="page-title">💬 Feedback</h2>
       </div>
       <div class="feedback-layout">
-        <form class="feedback-form card" id="feedback-form-el" novalidate>
-          <div class="field-group">
-            <label class="field-label" for="feedback-type">Feedback Type</label>
-            <div class="feedback-type-grid" role="group" aria-label="Feedback type">
-              <button type="button" class="feedback-type-btn active" data-type="bug">🐛 Bug Report</button>
-              <button type="button" class="feedback-type-btn" data-type="feature">💡 Feature Request</button>
-              <button type="button" class="feedback-type-btn" data-type="general">💬 General</button>
+        <form class="glass-card feedback-form" id="feedback-form-el" novalidate>
+          <div class="field">
+            <label class="field__label">Type</label>
+            <div class="type-pills" role="group">
+              <button type="button" class="type-pill active" data-type="bug">🐛 Bug</button>
+              <button type="button" class="type-pill" data-type="feature">💡 Feature</button>
+              <button type="button" class="type-pill" data-type="general">💬 General</button>
             </div>
-            <select id="feedback-type" class="visually-hidden" aria-hidden="true">
-              <option value="bug">Report a Bug</option>
-              <option value="feature">Suggest a Feature</option>
-              <option value="general">General Feedback</option>
+            <select id="feedback-type" class="sr-only" aria-hidden="true">
+              <option value="bug">Bug</option>
+              <option value="feature">Feature</option>
+              <option value="general">General</option>
             </select>
           </div>
-          <div class="field-group">
-            <label class="field-label" for="feedback-message">Your Message</label>
-            <textarea id="feedback-message" class="field-input" rows="5" placeholder="Tell us what's on your mind…" required></textarea>
+          <div class="field">
+            <label class="field__label" for="feedback-message">Message</label>
+            <textarea id="feedback-message" class="field__input field__textarea" rows="5" placeholder="Tell us what's on your mind…" required></textarea>
           </div>
-          <div class="rating-group" role="group" aria-label="Rate your experience">
-            <span class="field-label">Rate your experience</span>
-            <div class="star-rating" id="star-rating">
+          <div class="field">
+            <label class="field__label">Rate your experience</label>
+            <div class="stars" id="star-rating" role="group" aria-label="Star rating">
               <button type="button" class="star" data-val="1" aria-label="1 star">★</button>
               <button type="button" class="star" data-val="2" aria-label="2 stars">★</button>
               <button type="button" class="star" data-val="3" aria-label="3 stars">★</button>
@@ -401,66 +399,84 @@
           </div>
           <button type="submit" class="btn btn--primary">Submit Feedback 🚀</button>
         </form>
-        <div class="feedback-info card">
-          <h3 class="card__title">📬 Contact Support</h3>
-          <p>📧 <a href="mailto:support@neurallearn.ai">support@neurallearn.ai</a></p>
-          <p>📞 +251-123-456-789</p>
-          <p>⏰ Mon–Fri, 9am–6pm EAT</p>
+        <div class="glass-card feedback-contact">
+          <h3 class="glass-card__title">📬 Contact</h3>
+          <ul class="contact-list">
+            <li>📧 <a href="mailto:support@neurallearn.ai">support@neurallearn.ai</a></li>
+            <li>📞 +251-123-456-789</li>
+            <li>⏰ Mon–Fri, 9am–6pm EAT</li>
+          </ul>
+          <div class="social-row">
+            <a href="#" class="social-btn" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-btn" aria-label="GitHub">⌥</a>
+            <a href="#" class="social-btn" aria-label="Discord">◈</a>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- HELP ────────────────────────────────────────────────────────────── -->
-    <section id="help" class="section" aria-labelledby="help-title">
-      <div class="section__header">
-        <h2 id="help-title" class="section__title">❓ Help &amp; Resources</h2>
+    <section id="help" class="page" aria-labelledby="help-h">
+      <div class="page-header">
+        <h2 id="help-h" class="page-title">❓ Help &amp; Resources</h2>
       </div>
       <div class="help-layout">
-        <div class="faq card">
-          <h3 class="card__title">Frequently Asked Questions</h3>
-          <details class="faq-item">
-            <summary>How do I reset my password?</summary>
-            <p>Use the Feedback form to contact an administrator, or email support@neurallearn.ai.</p>
-          </details>
-          <details class="faq-item">
-            <summary>How do I access course materials?</summary>
-            <p>Navigate to the Courses section, select a course, and browse the syllabus and assignments.</p>
-          </details>
-          <details class="faq-item">
-            <summary>How does the AI chatbot work?</summary>
-            <p>The chatbot uses natural language processing to answer questions about your courses and topics.</p>
-          </details>
-          <details class="faq-item">
-            <summary>How are points and badges earned?</summary>
-            <p>Complete quizzes, post in forums, upload content, and submit feedback to earn points and unlock badges.</p>
-          </details>
+        <div class="glass-card">
+          <h3 class="glass-card__title">Frequently Asked Questions</h3>
+          <details class="faq"><summary>How do I reset my password?</summary><p>Use the Feedback form or email support@neurallearn.ai.</p></details>
+          <details class="faq"><summary>How do I access course materials?</summary><p>Navigate to Courses, select a course, and browse the syllabus.</p></details>
+          <details class="faq"><summary>How does the AI chatbot work?</summary><p>It uses NLP to answer questions about your courses and topics.</p></details>
+          <details class="faq"><summary>How are points and badges earned?</summary><p>Complete quizzes, post in forums, upload content, and submit feedback.</p></details>
+          <details class="faq"><summary>Can I use NeuralLearn offline?</summary><p>Yes! Actions are queued and synced automatically when you reconnect.</p></details>
         </div>
-        <div class="shortcuts card">
-          <h3 class="card__title">⌨️ Keyboard Shortcuts</h3>
-          <ul class="shortcut-list">
-            <li><kbd>Enter</kbd> — Send chat message</li>
-            <li><kbd>Esc</kbd> — Close modal / sidebar</li>
-            <li><kbd>T</kbd> — Toggle theme</li>
-          </ul>
+        <div class="help-side">
+          <div class="glass-card">
+            <h3 class="glass-card__title">⌨️ Shortcuts</h3>
+            <ul class="shortcut-list">
+              <li><kbd>Enter</kbd> Send chat</li>
+              <li><kbd>Esc</kbd> Close modal</li>
+              <li><kbd>T</kbd> Toggle theme</li>
+              <li><kbd>M</kbd> Toggle menu</li>
+            </ul>
+          </div>
+          <div class="glass-card">
+            <h3 class="glass-card__title">🚀 Quick Start</h3>
+            <ol class="quickstart-list">
+              <li>Sign in with your credentials</li>
+              <li>Browse your enrolled courses</li>
+              <li>Take a quiz to earn points</li>
+              <li>Ask the AI tutor anything</li>
+              <li>Track progress in Analytics</li>
+            </ol>
+          </div>
         </div>
       </div>
     </section>
 
-  </main><!-- /main-content -->
+  </main>
 
-  <!-- ── Modal ─────────────────────────────────────────────────────────── -->
-  <div id="modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-message">
+  <!-- ── Modal ───────────────────────────────────────────────────────────── -->
+  <div id="modal" class="modal-veil" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-msg">
     <div class="modal-box">
-      <div class="modal-icon" id="modal-icon" aria-hidden="true">ℹ️</div>
-      <p id="modal-message" class="modal-message"></p>
+      <div class="modal-box__icon" id="modal-icon">ℹ️</div>
+      <p id="modal-msg" class="modal-box__msg"></p>
       <button class="btn btn--primary" id="modal-close">Got it</button>
     </div>
   </div>
 
-  <!-- ── Toast container ───────────────────────────────────────────────── -->
+  <!-- ── Level-up overlay ─────────────────────────────────────────────────── -->
+  <div id="levelup-overlay" class="levelup-overlay" aria-hidden="true">
+    <div class="levelup-box">
+      <div class="levelup-icon">⚡</div>
+      <h2 class="levelup-title">Level Up!</h2>
+      <p class="levelup-sub" id="levelup-sub">You reached Level 2</p>
+    </div>
+  </div>
+
+  <!-- ── Toast container ─────────────────────────────────────────────────── -->
   <div id="toast-container" aria-live="assertive" aria-atomic="false"></div>
 
-  <!-- ── Scripts ───────────────────────────────────────────────────────── -->
+  <!-- ── Scripts ─────────────────────────────────────────────────────────── -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
