@@ -1,0 +1,8 @@
+backend/python/.env
+backend/php/.env
+backend/python/__pycache__/
+backend/python/api/__pycache__/
+backend/python/config/__pycache__/
+backend/php/vendor/
+node_modules/
+*.pyc
