@@ -343,7 +343,7 @@ async function signup(e) {
         toast(`Account created! Welcome, ${username}! 🎉`,'success'); playSound('success');
         S.user=username; S.userId=Date.now(); S.role=role; S.points=0; S.streak=0; S.token=null;
         checkStreak(); syncStats(); addXP(10);
-        showSection('dashboard');
+        setTimeout(()=>showSection('dashboard'), 50);
     } catch(err){showModal('Signup failed. Please try again.','❌');console.error(err);}
     finally { if (txt) txt.hidden=false; if (spin) spin.hidden=true; if (btn) btn.disabled=false; }
 }
@@ -371,20 +371,29 @@ async function login(e) {
                 data=await res.json();
             } catch { /* backend down */ }
         }
-        // 2. Try local user store
+        // 2. Try local user store (by username OR email)
         if (!data?.success) {
-            const found=getLocalUsers().find(u=>u.username===username&&u.password===password);
+            const found=getLocalUsers().find(u=>
+                (u.username===username || u.email===username) && u.password===password
+            );
             if (found) data={success:true,token:null,user:found};
         }
         // 3. Demo fallback — always works
         if (!data?.success) {
             data={success:true,token:null,user:{id:1,username,user_type:S.role,points:0,streak:0}};
         }
-        S.token=data.token; S.user=data.user.username; S.userId=data.user.id;
-        S.role=data.user.user_type; S.points=data.user.points||0; S.streak=data.user.streak||0;
-        checkStreak(); syncStats(); addXP(10);
+        S.token=data.token;
+        // Use the stored username (not the email they typed)
+        S.user  = data.user.username || username;
+        S.userId = data.user.id;
+        S.role  = data.user.user_type || S.role;
+        S.points = data.user.points || 0;
+        S.streak = data.user.streak || 0;
+
         toast(`Welcome back, ${S.user}! 🎓`,'success'); playSound('success');
-        showSection('dashboard');
+        checkStreak(); syncStats(); addXP(10);
+        // Small delay so state is fully set before dashboard renders
+        setTimeout(()=>showSection('dashboard'), 50);
     } catch(err){showModal('Login failed. Please try again.','❌');console.error(err);}
     finally { if (txt) txt.hidden=false; if (spin) spin.hidden=true; if (btn) btn.disabled=false; }
 }
