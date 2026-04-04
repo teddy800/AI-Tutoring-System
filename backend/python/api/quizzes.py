@@ -1,30 +1,34 @@
+import os
 from flask import Blueprint, request, jsonify
-import mysql.connector
-from config.db_config import db_config
+from dotenv import load_dotenv
 from jose import jwt
+from config.db_config import get_pool
+
+load_dotenv()
 
 quizzes_bp = Blueprint('quizzes', __name__)
-SECRET_KEY = 'your-secret-key-12345'
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
 def verify_token(token):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return payload['data']
-    except Exception as e:
+        return payload
+    except Exception:
         return None
 
 @quizzes_bp.route('/quizzes', methods=['GET'])
 def get_quizzes():
+    conn = get_pool().get_connection()
     try:
-        conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT * FROM quizzes')
         quizzes = cursor.fetchall()
         cursor.close()
-        conn.close()
         return jsonify({'success': True, 'quizzes': quizzes})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
 
 @quizzes_bp.route('/submit-quiz', methods=['POST'])
 def submit_quiz():
@@ -34,11 +38,14 @@ def submit_quiz():
         return jsonify({'success': False, 'error': 'Invalid token'}), 401
 
     data = request.get_json()
-    answers = data.get('answers', [])
-    user_id = user['id']
+    if not data:
+        return jsonify({'success': False, 'error': 'Invalid JSON'}), 400
 
+    answers = data.get('answers', [])
+    user_id = user.get('id')
+
+    conn = get_pool().get_connection()
     try:
-        conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         score = 0
         for answer in answers:
@@ -50,7 +57,8 @@ def submit_quiz():
         cursor.execute('UPDATE users SET points = points + %s WHERE id = %s', (points_earned, user_id))
         conn.commit()
         cursor.close()
-        conn.close()
         return jsonify({'success': True, 'score': score, 'points_earned': points_earned})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        conn.close()

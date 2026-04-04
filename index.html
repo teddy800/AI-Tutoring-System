@@ -90,7 +90,7 @@
             <div class="chat-input-group">
                 <input type="text" id="chat-input" placeholder="Type your message...">
                 <button class="voice-btn" aria-label="Voice input">🎤</button>
-                <button>Send</button>
+                <button id="send-btn">Send</button>
             </div>
             <span class="user-status">Online</span>
         </section>
@@ -106,15 +106,15 @@
             <div class="course-grid"></div>
             <div id="course-details"></div>
         </section>
-        <section id="content-upload" class="content">
+        <section id="content-upload-section" class="content">
             <h2>Upload Content</h2>
-            <form id="content-upload">
+            <form id="content-upload-form">
                 <label for="content-title">Content Title</label>
                 <input type="text" id="content-title" required>
                 <label for="content-body">Content Description</label>
                 <textarea id="content-body" required></textarea>
-                <button type="button">Preview</button>
-                <button type="submit">Upload</button>
+                <button type="button" id="preview-btn">Preview</button>
+                <button type="submit" id="upload-btn">Upload</button>
                 <div class="content-preview" id="content-preview"></div>
             </form>
         </section>

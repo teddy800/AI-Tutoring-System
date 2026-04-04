@@ -1,78 +1,93 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET');
-header('Access-Control-Allow-Headers: Content-Type');
+require_once __DIR__ . '/vendor/autoload.php';
 
-$db = new mysqli('localhost', 'root', '', 'tutoring_system');
-if ($db->connect_error) {
-    die(json_encode(['success' => false, 'error' => 'Database connection failed']));
+$dotenv = \Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->safeLoad();
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+$allowedOrigin = $_ENV['ALLOWED_ORIGIN'] ?? '';
+$origin        = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($allowedOrigin && $origin === $allowedOrigin) {
+    header("Access-Control-Allow-Origin: {$origin}");
+    header('Vary: Origin');
+}
+header('Content-Type: application/json');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
 }
 
+// ── Rate limiting (APCu with file-based fallback) ─────────────────────────────
+function checkRateLimit(string $ip): bool {
+    $max    = (int)($_ENV['RATE_LIMIT_MAX']    ?? 5);
+    $window = (int)($_ENV['RATE_LIMIT_WINDOW'] ?? 60);
+    $key    = "login_attempts_{$ip}";
+
+    if (function_exists('apcu_fetch')) {
+        $current = apcu_fetch($key) ?: 0;
+        if ($current >= $max) return false;
+        apcu_store($key, $current + 1, $window);
+        return true;
+    }
+
+    // File-based fallback
+    $file = sys_get_temp_dir() . '/rl_' . md5($key) . '.json';
+    $data = file_exists($file) ? json_decode(file_get_contents($file), true) : ['count' => 0, 'expires' => 0];
+    if (time() > $data['expires']) {
+        $data = ['count' => 0, 'expires' => time() + $window];
+    }
+    if ($data['count'] >= $max) return false;
+    $data['count']++;
+    file_put_contents($file, json_encode($data), LOCK_EX);
+    return true;
+}
+
+// ── Database ──────────────────────────────────────────────────────────────────
+$db = new mysqli(
+    $_ENV['DB_HOST']     ?? 'localhost',
+    $_ENV['DB_USER']     ?? 'root',
+    $_ENV['DB_PASSWORD'] ?? '',
+    $_ENV['DB_NAME']     ?? 'tutoring_system'
+);
+if ($db->connect_error) {
+    http_response_code(500);
+    die(json_encode(['success' => false, 'error' => 'Database connection failed']));
+}
+$db->set_charset('utf8mb4');
+
+// ── Module includes ───────────────────────────────────────────────────────────
+require_once __DIR__ . '/api/auth.php';
+require_once __DIR__ . '/api/content.php';
+require_once __DIR__ . '/api/feedback.php';
+
+// ── Router ────────────────────────────────────────────────────────────────────
 $action = $_GET['action'] ?? '';
 
-if ($action === 'login') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $username = $data['username'] ?? '';
-    $password = $data['password'] ?? '';
-    $user_type = $data['user_type'] ?? '';
+switch ($action) {
+    case 'login':
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        if (!checkRateLimit($ip)) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'error' => 'Too many login attempts. Please try again later.']);
+            break;
+        }
+        handleLogin($db);
+        break;
 
-    $stmt = $db->prepare('SELECT id, username, password, user_type, points, streak FROM users WHERE username = ?');
-    $stmt->bind_param('s', $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
+    case 'upload-content':
+        handleUploadContent($db);
+        break;
 
-    if ($user && password_verify($password, $user['password'])) {
-        echo json_encode([
-            'success' => true,
-            'user' => [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'user_type' => $user['user_type'],
-                'points' => $user['points'],
-                'streak' => $user['streak']
-            ]
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Invalid credentials']);
-    }
-    $stmt->close();
-} elseif ($action === 'upload-content') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $title = $data['title'] ?? '';
-    $body = $data['body'] ?? '';
-    $uploaded_by = $data['uploaded_by'] ?? 0;
+    case 'feedback':
+        handleFeedback($db);
+        break;
 
-    $stmt = $db->prepare('INSERT INTO content (title, body, uploaded_by) VALUES (?, ?, ?)');
-    $stmt->bind_param('ssi', $title, $body, $uploaded_by);
-    if ($stmt->execute()) {
-        $stmt = $db->prepare('UPDATE users SET points = points + 10 WHERE id = ?');
-        $stmt->bind_param('i', $uploaded_by);
-        $stmt->execute();
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Upload failed']);
-    }
-    $stmt->close();
-} elseif ($action === 'feedback') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $user_id = $data['user_id'] ?? 0;
-    $type = $data['type'] ?? '';
-    $message = $data['message'] ?? '';
-
-    $stmt = $db->prepare('INSERT INTO feedback (user_id, type, message) VALUES (?, ?, ?)');
-    $stmt->bind_param('iss', $user_id, $type, $message);
-    if ($stmt->execute()) {
-        $stmt = $db->prepare('UPDATE users SET points = points + 2 WHERE id = ?');
-        $stmt->bind_param('i', $user_id);
-        $stmt->execute();
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Feedback submission failed']);
-    }
-    $stmt->close();
+    default:
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Unknown action']);
 }
 
 $db->close();
-?>

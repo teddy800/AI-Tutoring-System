@@ -3,3 +3,4 @@ flask-cors==5.0.0
 mysql-connector-python==9.0.0
 nltk==3.9.1
 python-jose==3.3.0
+python-dotenv==1.0.1
