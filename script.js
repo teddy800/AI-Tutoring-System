@@ -1,317 +1,249 @@
 /* eslint-disable no-undef, no-console */
 
-// ── App Configuration (override per environment) ─────────────────────────────
+// ── App Config ────────────────────────────────────────────────────────────────
 window.APP_CONFIG = {
-    phpBase: '/php-api',   // PHP backend base URL
-    pyBase:  '/py-api',    // Python/Flask backend base URL
-    wsUrl:   null          // WebSocket URL — set to wss://... in production
+    phpBase: '/php-api',
+    pyBase:  '/py-api',
+    wsUrl:   null
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-    currentUser: null,
-    userId:      null,
-    userType:    null,
-    token:       null,
-    quizTimer:   null,
-    points:      0,
-    courses:     [],
-    streak:      0,
-    offline:     !navigator.onLine
+    currentUser: null, userId: null, userType: null, token: null,
+    quizTimer: null, points: 0, courses: [], streak: 0,
+    offline: !navigator.onLine, chartType: 'bar', starRating: 0
 };
 
-// ── Mock Data (fallback when backend unavailable) ─────────────────────────────
+// ── Mock Data ─────────────────────────────────────────────────────────────────
 let mockCourses = [
-    {
-        id: 1,
-        title: "Introduction to Python",
-        description: "Master Python programming fundamentals.",
-        syllabus: ["Week 1: Variables", "Week 2: Functions", "Week 3: OOP"],
-        assignments: [{ title: "Calculator", dueDate: "2025-06-01" }],
-        forumPosts: [{ id: 1, user: "User1", message: "Debugging loops?", replies: [] }]
-    },
-    {
-        id: 2,
-        title: "Calculus Fundamentals",
-        description: "Learn derivatives and integrals.",
-        syllabus: ["Week 1: Limits", "Week 2: Derivatives", "Week 3: Integrals"],
-        assignments: [{ title: "Derivatives", dueDate: "2025-06-15" }],
-        forumPosts: []
-    }
+    { id:1, title:'Introduction to Python', description:'Master Python fundamentals.', emoji:'🐍',
+      syllabus:['Week 1: Variables','Week 2: Functions','Week 3: OOP'],
+      assignments:[{title:'Calculator',dueDate:'2025-06-01'}],
+      forumPosts:[{id:1,user:'Alice',message:'How do I debug loops?',replies:[]}] },
+    { id:2, title:'Calculus Fundamentals', description:'Learn derivatives and integrals.', emoji:'📐',
+      syllabus:['Week 1: Limits','Week 2: Derivatives','Week 3: Integrals'],
+      assignments:[{title:'Derivatives Problem Set',dueDate:'2025-06-15'}],
+      forumPosts:[] },
+    { id:3, title:'Web Development', description:'Build modern web applications.', emoji:'🌐',
+      syllabus:['Week 1: HTML','Week 2: CSS','Week 3: JavaScript'],
+      assignments:[{title:'Portfolio Site',dueDate:'2025-07-01'}],
+      forumPosts:[] }
 ];
 
 let mockQuizzes = [
-    {
-        id: 1,
-        question: "What is the output of `print(2 + 2)` in Python?",
-        options: ["22", "4", "Error", "None"],
-        correctAnswer: 1
-    },
-    {
-        id: 2,
-        question: "What is the derivative of x²?",
-        options: ["2x", "x", "x²", "2"],
-        correctAnswer: 0
-    }
+    { id:1, question:'What is the output of `print(2 + 2)` in Python?', options:['22','4','Error','None'], correctAnswer:1 },
+    { id:2, question:'What is the derivative of x²?', options:['2x','x','x²','2'], correctAnswer:0 },
+    { id:3, question:'Which HTML tag creates a hyperlink?', options:['<link>','<a>','<href>','<url>'], correctAnswer:1 }
 ];
 
-// ── Sound Effects ─────────────────────────────────────────────────────────────
+// ── Sounds ────────────────────────────────────────────────────────────────────
 const sounds = {};
 function initializeSounds() {
-    const audioFiles = {
-        toggle:  'assets/audio/toggle.mp3',
-        click:   'assets/audio/click.mp3',
-        success: 'assets/audio/success.mp3',
-        error:   'assets/audio/error.mp3',
-        badge:   'assets/audio/badge.mp3'
-    };
-    Object.entries(audioFiles).forEach(([key, src]) => {
+    ['toggle','click','success','error','badge'].forEach(k => {
         try {
-            sounds[key] = new Howl({
-                src: [src],
-                onloaderror: () => {
-                    console.warn(`Audio '${key}' unavailable — using silent fallback`);
-                    sounds[key] = { play: () => {} };
-                }
-            });
-        } catch {
-            sounds[key] = { play: () => {} };
-        }
+            sounds[k] = new Howl({ src:[`assets/audio/${k}.mp3`],
+                onloaderror: () => { sounds[k] = {play:()=>{}}; } });
+        } catch { sounds[k] = {play:()=>{}}; }
     });
 }
+function playSound(t) { try { sounds[t]?.play(); } catch {} }
 
-function playSound(type) {
-    try { sounds[type]?.play(); } catch { /* silent */ }
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type='success') {
+    const c = document.getElementById('toast-container');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    t.setAttribute('role','alert');
+    c.appendChild(t);
+    gsap.fromTo(t, {x:60,opacity:0}, {x:0,opacity:1,duration:0.4,ease:'power2.out',
+        onComplete:()=>setTimeout(()=>gsap.to(t,{opacity:0,x:60,duration:0.3,onComplete:()=>t.remove()}),3000)});
 }
 
-// ── Toast Notification ────────────────────────────────────────────────────────
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    document.body.appendChild(toast);
-    gsap.fromTo(toast,
-        { y: 50, opacity: 0 },
-        {
-            y: 0, opacity: 1, duration: 0.5, ease: 'power2.out',
-            onComplete: () => {
-                setTimeout(() => {
-                    gsap.to(toast, { opacity: 0, duration: 0.5, onComplete: () => toast.remove() });
-                }, 3000);
-            }
-        }
-    );
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function showModal(msg, icon='ℹ️') {
+    const m = document.getElementById('modal');
+    if (!m) return;
+    const mi = document.getElementById('modal-icon');
+    const mm = document.getElementById('modal-message');
+    if (mi) mi.textContent = icon;
+    if (mm) mm.textContent = msg;
+    m.classList.add('active');
+    m.setAttribute('aria-hidden','false');
+    document.getElementById('modal-close')?.focus();
+}
+function closeModal() {
+    const m = document.getElementById('modal');
+    if (!m) return;
+    m.classList.remove('active');
+    m.setAttribute('aria-hidden','true');
 }
 
-// ── Theme Toggle ──────────────────────────────────────────────────────────────
+// ── Theme ─────────────────────────────────────────────────────────────────────
 function toggleTheme() {
     const root = document.documentElement;
-    const newTheme = (root.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark';
-    gsap.to(root, {
-        duration: 0.4, opacity: 0,
-        onComplete: () => {
-            root.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            gsap.to(root, { duration: 0.4, opacity: 1 });
-            initParticles();
-            updateCourseCards(state.courses);
-            playSound('toggle');
-        }
-    });
+    const next = (root.getAttribute('data-theme')||'dark')==='dark' ? 'light' : 'dark';
+    gsap.to(root,{duration:0.3,opacity:0,onComplete:()=>{
+        root.setAttribute('data-theme',next);
+        localStorage.setItem('theme',next);
+        gsap.to(root,{duration:0.3,opacity:1});
+        initParticles();
+        playSound('toggle');
+    }});
 }
 
 // ── Particles ─────────────────────────────────────────────────────────────────
 function initParticles() {
     try {
-        if (window.pJSDom && window.pJSDom.length > 0) {
-            window.pJSDom[0].pJS.fn.vendors.destroypJS();
-            window.pJSDom = [];
-        }
-        particlesJS('particles-js', {
-            particles: {
-                number: { value: 80, density: { enable: true, value_area: 800 } },
-                color: { value: document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffffff' : '#333333' },
-                shape: { type: 'circle' },
-                opacity: { value: 0.5, random: true },
-                size: { value: 3, random: true },
-                move: { enable: true, speed: 2, direction: 'none', random: false }
-            },
-            interactivity: {
-                detect_on: 'canvas',
-                events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
-                modes: { repulse: { distance: 100 }, push: { particles_nb: 4 } }
-            },
-            retina_detect: true
-        });
-    } catch (e) { console.warn('Particles init failed:', e); }
+        if (window.pJSDom?.length) { window.pJSDom[0].pJS.fn.vendors.destroypJS(); window.pJSDom=[]; }
+        const dark = document.documentElement.getAttribute('data-theme')==='dark';
+        particlesJS('particles-js',{
+            particles:{number:{value:60,density:{enable:true,value_area:900}},
+                color:{value:dark?'#6699ff':'#4466cc'},
+                shape:{type:'circle'},opacity:{value:0.4,random:true},
+                size:{value:2.5,random:true},
+                move:{enable:true,speed:1.5,direction:'none',random:true}},
+            interactivity:{detect_on:'canvas',
+                events:{onhover:{enable:true,mode:'repulse'},onclick:{enable:true,mode:'push'}},
+                modes:{repulse:{distance:80},push:{particles_nb:3}}},
+            retina_detect:true});
+    } catch(e){console.warn('Particles:',e);}
 }
 
-// ── Offline Support ───────────────────────────────────────────────────────────
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function openSidebar() {
+    const s = document.querySelector('.sidebar');
+    const o = document.querySelector('.sidebar-overlay');
+    s?.classList.add('active');
+    o?.classList.add('active');
+}
+function closeSidebar() {
+    const s = document.querySelector('.sidebar');
+    const o = document.querySelector('.sidebar-overlay');
+    s?.classList.remove('active');
+    o?.classList.remove('active');
+}
+function toggleSidebar() {
+    document.querySelector('.sidebar')?.classList.contains('active') ? closeSidebar() : openSidebar();
+}
+
+// ── Offline ───────────────────────────────────────────────────────────────────
 function setupOfflineSupport() {
-    window.addEventListener('online', () => {
-        state.offline = false;
-        document.body.classList.remove('offline');
-        showToast('Back online!', 'success');
-        updateUserStatus();
-        syncOfflineData();
-    });
-    window.addEventListener('offline', () => {
-        state.offline = true;
-        document.body.classList.add('offline');
-        showToast('Offline mode activated', 'error');
-        updateUserStatus();
-    });
+    const update = () => {
+        state.offline = !navigator.onLine;
+        document.body.classList.toggle('offline', state.offline);
+        const lbl = document.querySelector('.online-indicator .label');
+        if (lbl) lbl.textContent = state.offline ? 'Offline' : 'Online';
+        if (!state.offline) { showToast('Back online!','success'); syncOfflineData(); }
+        else showToast('Offline mode','error');
+    };
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
     if (state.offline) document.body.classList.add('offline');
 }
-
 async function syncOfflineData() {
     if (!('caches' in window)) return;
     try {
         const cache = await caches.open('tutoring-system');
-        const requests = await cache.keys();
-        for (const req of requests) {
+        const keys = await cache.keys();
+        for (const req of keys) {
             const res = await cache.match(req);
             if (res) {
                 const data = await res.json();
-                await fetch(req.url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
+                await fetch(req.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
                 await cache.delete(req);
             }
         }
-        if (requests.length) showToast('Offline data synced', 'success');
-    } catch (e) { console.error('Offline sync failed:', e); }
+        if (keys.length) showToast('Offline data synced','success');
+    } catch(e){console.error('Sync failed:',e);}
 }
-
 async function cacheRequest(url, data) {
     if (!('caches' in window)) return;
-    try {
-        const cache = await caches.open('tutoring-system');
-        await cache.put(url, new Response(JSON.stringify(data)));
-    } catch (e) { console.error('Cache request failed:', e); }
+    try { const c=await caches.open('tutoring-system'); await c.put(url,new Response(JSON.stringify(data))); }
+    catch(e){console.error('Cache failed:',e);}
 }
 
 // ── Voice Input ───────────────────────────────────────────────────────────────
 function setupVoiceInput() {
-    const chatInput = document.getElementById('chat-input');
-    const voiceBtn  = document.querySelector('.voice-btn');
-    if (!voiceBtn || !chatInput) return;
-
-    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
-
-        voiceBtn.addEventListener('click', () => {
-            try {
-                recognition.start();
-                voiceBtn.classList.add('recording');
-                showToast('Listening...', 'success');
-            } catch (e) {
-                showToast('Voice recognition failed', 'error');
-            }
-        });
-
-        recognition.onresult = (e) => {
-            chatInput.value = e.results[0][0].transcript;
-            voiceBtn.classList.remove('recording');
-            sendChat();
-        };
-
-        recognition.onerror = () => {
-            voiceBtn.classList.remove('recording');
-            showToast('Voice recognition failed', 'error');
-        };
-    } else {
-        voiceBtn.style.display = 'none';
-    }
+    const input = document.getElementById('chat-input');
+    const btn   = document.querySelector('.voice-btn');
+    if (!btn||!input) return;
+    if (!(window.SpeechRecognition||window.webkitSpeechRecognition)) { btn.style.display='none'; return; }
+    const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+    rec.lang='en-US'; rec.interimResults=false;
+    btn.addEventListener('click',()=>{ try{rec.start();btn.classList.add('recording');showToast('Listening…','info');}catch{} });
+    rec.onresult = e => { input.value=e.results[0][0].transcript; btn.classList.remove('recording'); sendChat(); };
+    rec.onerror  = () => { btn.classList.remove('recording'); showToast('Voice failed','error'); };
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
-function showModal(message) {
-    const modal = document.getElementById('modal');
-    if (!modal) return;
-    document.getElementById('modal-message').textContent = message;
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    gsap.fromTo('.modal-content', { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'power2.out' });
-    modal.querySelector('button').focus();
-}
-
-function closeModal() {
-    const modal = document.getElementById('modal');
-    if (!modal) return;
-    gsap.to('.modal-content', {
-        scale: 0.8, opacity: 0, duration: 0.3, ease: 'power2.in',
-        onComplete: () => { modal.classList.remove('active'); modal.setAttribute('aria-hidden', 'true'); }
-    });
-}
-
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    if (!sidebar) return;
-    sidebar.classList.toggle('active');
-    gsap.to(sidebar, { left: sidebar.classList.contains('active') ? 0 : -300, duration: 0.3, ease: 'power2.out' });
-}
-
+// ── Swipe ─────────────────────────────────────────────────────────────────────
 function setupSwipeNavigation() {
-    let startX = 0;
-    document.addEventListener('touchstart', (e) => { startX = e.changedTouches[0].screenX; });
-    document.addEventListener('touchend', (e) => {
-        const diff = e.changedTouches[0].screenX - startX;
-        if (Math.abs(diff) > 50) toggleSidebar();
+    let sx=0;
+    document.addEventListener('touchstart',e=>{sx=e.changedTouches[0].screenX;});
+    document.addEventListener('touchend',e=>{
+        const dx=e.changedTouches[0].screenX-sx;
+        if (dx>60) openSidebar();
+        else if (dx<-60) closeSidebar();
     });
 }
 
-// ── Section Navigation ────────────────────────────────────────────────────────
-function showSection(sectionId) {
-    const sections = document.querySelectorAll('.content');
-    sections.forEach(s => s.classList.remove('active'));
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+        if (e.key==='Escape') { closeModal(); closeSidebar(); }
+        if (e.key==='t'||e.key==='T') toggleTheme();
+    });
+}
 
-    const target = document.getElementById(sectionId);
-    if (!target) {
-        console.warn(`Section "${sectionId}" not found`);
-        document.getElementById('login-form')?.classList.add('active');
-        return;
-    }
-
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    const target = document.getElementById(id);
+    if (!target) { document.getElementById('login-form')?.classList.add('active'); return; }
     target.classList.add('active');
-    gsap.fromTo(target, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' });
 
-    // Only close sidebar if it's currently open
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar && sidebar.classList.contains('active')) toggleSidebar();
+    // Update nav active states
+    document.querySelectorAll('.topnav__link,.nav-item').forEach(a=>{
+        a.classList.toggle('active', a.getAttribute('href')==='#'+id || a.dataset.section===id);
+    });
 
-    try {
-        switch (sectionId) {
-            case 'dashboard':          loadDashboard();      break;
-            case 'quiz-section':       loadQuizzes();        break;
-            case 'course-section':     loadCourseSection();  break;
-            case 'analytics':          loadAnalytics();      break;
-            case 'feedback':           loadFeedback();       break;
-            case 'help':               loadHelp();           break;
-            case 'content-repo':       loadRepository();     break;
-        }
-    } catch (e) {
-        console.error(`Error loading section ${sectionId}:`, e);
-        showToast(`Failed to load ${sectionId}`, 'error');
-    }
+    // Close sidebar only if open
+    if (document.querySelector('.sidebar')?.classList.contains('active')) closeSidebar();
 
+    // Load section data
+    const loaders = {
+        dashboard:'loadDashboard', 'quiz-section':'loadQuizzes',
+        'course-section':'loadCourseSection', analytics:'loadAnalytics',
+        feedback:'loadFeedback', help:'loadHelp', 'content-repo':'loadRepository'
+    };
+    if (loaders[id]) window[loaders[id]]?.();
     playSound('click');
 }
 
-// ── User Status ───────────────────────────────────────────────────────────────
-function updateUserStatus() {
-    const status = document.querySelector('.user-status');
-    if (status) {
-        status.textContent = state.offline ? 'Offline' : 'Online';
-        status.setAttribute('aria-label', `User Status: ${state.offline ? 'Offline' : 'Online'}`);
-    }
+// ── Update sidebar user info ──────────────────────────────────────────────────
+function updateSidebarUser() {
+    const userEl = document.getElementById('sidebar-user');
+    if (userEl) userEl.hidden = !state.currentUser;
+    const av = document.getElementById('sidebar-avatar');
+    if (av) av.textContent = (state.currentUser||'?')[0].toUpperCase();
+    const un = document.getElementById('sidebar-username');
+    if (un) un.textContent = state.currentUser||'';
+    const ro = document.getElementById('sidebar-role');
+    if (ro) ro.textContent = state.userType||'';
+    const pts = document.getElementById('sidebar-points-val');
+    if (pts) pts.textContent = state.points;
+}
+
+// ── Update stat cards ─────────────────────────────────────────────────────────
+function updateStats() {
+    const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('stat-points', state.points);
+    set('stat-streak', state.streak);
+    set('stat-courses', state.courses.length);
+    set('stat-badges', document.querySelectorAll('#badges-container .badge').length);
+    updateSidebarUser();
 }
 
 // ── Login ─────────────────────────────────────────────────────────────────────
@@ -320,666 +252,616 @@ async function login(event) {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     state.userType = document.getElementById('user-type').value;
+    if (!username||!password) { showModal('Please fill in all fields','⚠️'); playSound('error'); return; }
 
-    if (!username || !password) {
-        showModal('Please fill in all fields');
-        playSound('error');
-        return;
-    }
+    const btn = event.target.querySelector('[type=submit]');
+    const loader = btn?.querySelector('.btn__loader');
+    const text   = btn?.querySelector('.btn__text');
+    if (loader) loader.hidden=false;
+    if (text)   text.hidden=true;
+    if (btn)    btn.disabled=true;
 
     try {
         let data;
         if (state.offline) {
-            // Offline fallback — accept any credentials
-            data = { success: true, token: null, user: { id: 1, username, user_type: state.userType, points: 0, streak: 0 } };
-            cacheRequest(`${APP_CONFIG.phpBase}?action=login`, { username, password, user_type: state.userType });
+            data={success:true,token:null,user:{id:1,username,user_type:state.userType,points:0,streak:0}};
+            cacheRequest(`${APP_CONFIG.phpBase}?action=login`,{username,password,user_type:state.userType});
         } else {
-            const res = await fetch(`${APP_CONFIG.phpBase}?action=login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, user_type: state.userType })
-            });
-            data = await res.json();
+            const res=await fetch(`${APP_CONFIG.phpBase}?action=login`,{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({username,password,user_type:state.userType})});
+            data=await res.json();
         }
-
-        if (!data.success) {
-            showModal(data.error || 'Invalid credentials');
-            playSound('error');
-            return;
-        }
-
-        state.token       = data.token;
-        state.currentUser = data.user.username;
-        state.userId      = data.user.id;
-        state.userType    = data.user.user_type;
-        state.points      = data.user.points || 0;
-        state.streak      = data.user.streak || 0;
-
-        showToast('Login successful!', 'success');
+        if (!data.success) { showModal(data.error||'Invalid credentials','❌'); playSound('error'); return; }
+        state.token=data.token; state.currentUser=data.user.username;
+        state.userId=data.user.id; state.userType=data.user.user_type;
+        state.points=data.user.points||0; state.streak=data.user.streak||0;
+        showToast(`Welcome back, ${state.currentUser}! 🎓`,'success');
         playSound('success');
-        showSection('dashboard');
-        updateUserStatus();
         checkStreak();
-    } catch (e) {
-        showModal('Network error. Please try again.');
-        console.error('Login error:', e);
+        updateStats();
+        showSection('dashboard');
+    } catch(e) { showModal('Network error. Please try again.','🌐'); console.error(e); }
+    finally {
+        if (loader) loader.hidden=true;
+        if (text)   text.hidden=false;
+        if (btn)    btn.disabled=false;
     }
 }
 
 // ── Streak ────────────────────────────────────────────────────────────────────
 function checkStreak() {
-    const lastLogin = localStorage.getItem('lastLogin');
-    const today     = new Date().toISOString().split('T')[0];
-    if (lastLogin === today) return;
-
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    if (lastLogin === yesterday) {
-        state.streak++;
-        showToast(`🔥 Streak: ${state.streak} days!`, 'success');
-        if (state.streak % 5 === 0) awardBadge('Streak Master');
-    } else {
-        state.streak = 1;
-    }
-    localStorage.setItem('streak', state.streak);
-    localStorage.setItem('lastLogin', today);
-    updateStreakDisplay();
+    const last=localStorage.getItem('lastLogin');
+    const today=new Date().toISOString().split('T')[0];
+    if (last===today) return;
+    const yesterday=new Date(Date.now()-86400000).toISOString().split('T')[0];
+    state.streak = last===yesterday ? state.streak+1 : 1;
+    localStorage.setItem('streak',state.streak);
+    localStorage.setItem('lastLogin',today);
+    if (state.streak%5===0) awardBadge('Streak Master');
+    const el=document.getElementById('streak-display');
+    if (el) { el.textContent=`${state.streak} day streak`; gsap.from(el,{scale:0.8,opacity:0,duration:0.5,ease:'back.out(1.7)'}); }
+    const st=document.getElementById('stat-streak');
+    if (st) st.textContent=state.streak;
 }
 
-function updateStreakDisplay() {
-    const el = document.querySelector('.streak p');
-    if (el) {
-        el.textContent = `🔥 Current Streak: ${state.streak} days`;
-        gsap.from(el, { opacity: 0, scale: 0.8, duration: 0.5 });
-    }
-}
-
-// ── Badge System ──────────────────────────────────────────────────────────────
-function awardBadge(badgeName) {
-    const badgesDiv = document.querySelector('.badges');
-    if (!badgesDiv) return;
-    const badgeType = badgeName.toLowerCase().replace(/\s+/g, '-');
-    // Avoid duplicate badges
-    if (badgesDiv.querySelector(`[data-type="${badgeType}"]`)) return;
-    const badge = document.createElement('div');
-    badge.className = `badge badge-${badgeType}`;
-    badge.textContent = badgeName;
-    badge.setAttribute('data-type', badgeType);
-    badgesDiv.appendChild(badge);
-    gsap.from(badge, { scale: 0, opacity: 0, duration: 0.5, ease: 'back.out(1.7)' });
-    showToast(`🏅 Badge earned: ${badgeName}!`, 'success');
+// ── Badges ────────────────────────────────────────────────────────────────────
+function awardBadge(name) {
+    const c=document.getElementById('badges-container');
+    if (!c) return;
+    const type=name.toLowerCase().replace(/\s+/g,'-');
+    if (c.querySelector(`[data-type="${type}"]`)) return;
+    const b=document.createElement('div');
+    b.className=`badge`; b.textContent=name; b.setAttribute('data-type',type);
+    c.appendChild(b);
+    gsap.from(b,{scale:0,opacity:0,duration:0.5,ease:'back.out(1.7)'});
+    showToast(`🏅 Badge earned: ${name}!`,'success');
     playSound('badge');
+    const st=document.getElementById('stat-badges');
+    if (st) st.textContent=c.querySelectorAll('.badge').length;
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function loadDashboard() {
     if (!state.currentUser) { showSection('login-form'); return; }
-
-    const welcome = document.getElementById('welcome-message');
-    if (welcome) {
-        welcome.textContent = `Welcome back, ${state.currentUser}! 🎓 Points: ${state.points}`;
-        welcome.setAttribute('aria-live', 'polite');
-        gsap.from(welcome, { opacity: 0, x: -20, duration: 0.5 });
-    }
+    const wm=document.getElementById('welcome-message');
+    if (wm) { wm.textContent=`Welcome back, ${state.currentUser}! 🎓`; gsap.from(wm,{opacity:0,x:-20,duration:0.5}); }
 
     try {
-        let courses = mockCourses;
-        if (!state.offline && state.token) {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/courses`, {
-                headers: { Authorization: `Bearer ${state.token}` }
-            });
-            const data = await res.json();
-            if (data.success && data.courses?.length) {
-                mockCourses = data.courses;
-                courses = data.courses;
-            }
+        let courses=mockCourses;
+        if (!state.offline&&state.token) {
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/courses`,{headers:{Authorization:`Bearer ${state.token}`}});
+            const d=await res.json();
+            if (d.success&&d.courses?.length) { mockCourses=d.courses; courses=d.courses; }
         }
-        const withProgress = courses.map(c => ({ ...c, progress: Math.floor(Math.random() * 100) }));
-        updateProgressTracker(50);
-        updateCourseCards(withProgress);
+        const withProg=courses.map(c=>({...c,progress:Math.floor(Math.random()*100)}));
+        state.courses=withProg;
+        renderDashboardCourses(withProg);
+        updateProgressTracker(Math.round(withProg.reduce((s,c)=>s+c.progress,0)/withProg.length)||0);
+        renderLeaderboard();
+        updateStats();
 
-        const recDiv = document.getElementById('recommendations');
-        if (recDiv) {
-            recDiv.textContent = `📚 Recommended: Advanced Python, Linear Algebra`;
-            gsap.from(recDiv, { opacity: 0, y: 20, duration: 0.5, delay: 0.2 });
-        }
-        loadLeaderboard();
-    } catch (e) {
-        showToast('Failed to load dashboard', 'error');
-        console.error('Dashboard error:', e);
-    }
+        const rec=document.getElementById('recommendations');
+        if (rec) { rec.textContent='📚 Recommended for you: Advanced Python, Linear Algebra, Data Structures'; gsap.from(rec,{opacity:0,y:20,duration:0.5,delay:0.2}); }
+    } catch(e) { showToast('Failed to load dashboard','error'); console.error(e); }
 }
 
-function updateProgressTracker(progress) {
-    document.querySelectorAll('.milestone').forEach(m => {
-        m.classList.toggle('active', progress >= parseInt(m.dataset.milestone));
+function updateProgressTracker(pct) {
+    const fill=document.getElementById('overall-progress-fill');
+    const lbl=document.getElementById('overall-progress-label');
+    const track=document.querySelector('.progress-track');
+    if (fill) fill.style.width=pct+'%';
+    if (lbl)  lbl.textContent=pct+'%';
+    if (track){ track.setAttribute('aria-valuenow',pct); }
+    document.querySelectorAll('.milestone').forEach(m=>{
+        m.classList.toggle('active',pct>=parseInt(m.dataset.milestone));
     });
 }
 
-async function loadLeaderboard() {
-    const div = document.querySelector('.leaderboard');
-    if (!div) return;
-    const data = [
-        { username: state.currentUser || 'You', points: state.points },
-        { username: 'Alice', points: 120 },
-        { username: 'Bob',   points: 95 },
-    ].sort((a, b) => b.points - a.points);
-
-    div.innerHTML = '<h3>🏆 Leaderboard</h3><ul>' +
-        data.map((u, i) => `<li>${['🥇','🥈','🥉'][i] || '  '} ${u.username}: ${u.points} pts</li>`).join('') +
-        '</ul>';
-    gsap.from(div, { opacity: 0, y: 20, duration: 0.5 });
-}
-
-function updateCourseCards(courses = []) {
-    const grid = document.querySelector('#dashboard .course-grid');
+function renderDashboardCourses(courses) {
+    const grid=document.getElementById('dashboard-course-grid');
     if (!grid) return;
-    state.courses = courses;
-    grid.innerHTML = courses.map(c => `
+    grid.innerHTML=courses.map(c=>`
         <div class="course-card" data-course-id="${c.id}" role="gridcell" tabindex="0">
+            <span class="course-card__emoji">${c.emoji||'📚'}</span>
             <h3>${c.title}</h3>
             <p>${c.description}</p>
-            <div class="progress-label">Progress: ${c.progress ?? 0}%</div>
-            <div class="progress-bar">
-                <div class="progress-fill" role="progressbar"
-                     aria-valuenow="${c.progress ?? 0}" aria-valuemin="0" aria-valuemax="100"
-                     style="width:${c.progress ?? 0}%"></div>
-            </div>
+            <div class="progress-label">Progress: ${c.progress??0}%</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${c.progress??0}%"
+                role="progressbar" aria-valuenow="${c.progress??0}" aria-valuemin="0" aria-valuemax="100"></div></div>
         </div>`).join('');
-    gsap.from('.course-card', { opacity: 0, y: 20, stagger: 0.1, duration: 0.5 });
+    gsap.from('#dashboard-course-grid .course-card',{opacity:0,y:24,stagger:0.08,duration:0.5});
 }
 
-// ── Course Section ────────────────────────────────────────────────────────────
+function renderLeaderboard() {
+    const list=document.getElementById('leaderboard-list');
+    if (!list) return;
+    const data=[
+        {username:state.currentUser||'You',points:state.points},
+        {username:'Alice',points:120},{username:'Bob',points:95},{username:'Carol',points:80}
+    ].sort((a,b)=>b.points-a.points);
+    const medals=['🥇','🥈','🥉'];
+    list.innerHTML=data.map((u,i)=>`<li>${medals[i]||'  '} <strong>${u.username}</strong> — ${u.points} pts</li>`).join('');
+    gsap.from('#leaderboard-list li',{opacity:0,x:-16,stagger:0.07,duration:0.4});
+}
+
+// ── Courses ───────────────────────────────────────────────────────────────────
 async function loadCourseSection() {
-    const details = document.getElementById('course-details');
-    if (!details) return;
+    const grid=document.getElementById('course-grid');
+    const details=document.getElementById('course-details');
+    if (!grid) return;
     try {
-        let courses = mockCourses;
-        if (!state.offline && state.token) {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/courses`, {
-                headers: { Authorization: `Bearer ${state.token}` }
-            });
-            const data = await res.json();
-            if (data.success && data.courses?.length) { mockCourses = data.courses; courses = data.courses; }
+        let courses=mockCourses;
+        if (!state.offline&&state.token) {
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/courses`,{headers:{Authorization:`Bearer ${state.token}`}});
+            const d=await res.json();
+            if (d.success&&d.courses?.length) { mockCourses=d.courses; courses=d.courses; }
         }
-        state.courses = courses;
-        details.innerHTML = courses.map(c => `
-            <div class="course-detail" data-course-id="${c.id}">
+        state.courses=courses;
+        grid.innerHTML=courses.map(c=>`
+            <div class="course-card" data-course-id="${c.id}" role="gridcell" tabindex="0">
+                <span class="course-card__emoji">${c.emoji||'📚'}</span>
                 <h3>${c.title}</h3>
                 <p>${c.description}</p>
-                <div class="course-syllabus">
+            </div>`).join('');
+        gsap.from('#course-grid .course-card',{opacity:0,y:24,stagger:0.08,duration:0.5});
+
+        if (details) {
+            details.innerHTML=courses.map(c=>`
+                <div class="course-detail">
+                    <h3>${c.emoji||'📚'} ${c.title}</h3>
+                    <p>${c.description}</p>
                     <h4>Syllabus</h4>
-                    <ul>${(c.syllabus || []).map(i => `<li>${i}</li>`).join('') || '<li>No syllabus</li>'}</ul>
-                </div>
-                <div class="course-assignments">
+                    <ul>${(c.syllabus||[]).map(i=>`<li>${i}</li>`).join('')||'<li>No syllabus</li>'}</ul>
                     <h4>Assignments</h4>
-                    <ul>${(c.assignments || []).map(a => `<li>${a.title} (Due: ${a.dueDate})</li>`).join('') || '<li>No assignments</li>'}</ul>
-                </div>
-                <div class="course-forum">
+                    <ul>${(c.assignments||[]).map(a=>`<li>${a.title} — Due: ${a.dueDate}</li>`).join('')||'<li>None</li>'}</ul>
                     <h4>Discussion Forum</h4>
-                    ${(c.forumPosts || []).map(p => `
-                        <div class="forum-post" data-post-id="${p.id}">
+                    ${(c.forumPosts||[]).map(p=>`
+                        <div class="forum-post">
                             <p><strong>${p.user}:</strong> ${p.message}</p>
-                            ${(p.replies || []).map(r => `<p class="reply"><strong>${r.user}:</strong> ${r.message}</p>`).join('')}
+                            ${(p.replies||[]).map(r=>`<p class="reply"><strong>${r.user}:</strong> ${r.message}</p>`).join('')}
                             <form class="forum-reply-form" data-post-id="${p.id}">
-                                <textarea placeholder="Reply..." aria-label="Reply to post" required></textarea>
-                                <button type="submit">Post Reply</button>
+                                <textarea placeholder="Reply…" required></textarea>
+                                <button type="submit">Reply</button>
                             </form>
-                        </div>`).join('') || '<p>No posts yet</p>'}
+                        </div>`).join('')||'<p style="color:var(--text-3)">No posts yet</p>'}
                     <form class="forum-post-form" data-course-id="${c.id}">
-                        <textarea placeholder="Start a discussion..." aria-label="New forum post" required></textarea>
+                        <textarea placeholder="Start a discussion…" required></textarea>
                         <button type="submit">Post</button>
                     </form>
-                </div>
-            </div>`).join('');
-        setupForumInteractions();
-        gsap.from('.course-detail', { opacity: 0, y: 20, stagger: 0.1, duration: 0.5 });
-    } catch (e) {
-        showToast('Failed to load courses', 'error');
-        details.innerHTML = '<p>Unable to load courses</p>';
-    }
+                </div>`).join('');
+            setupForumInteractions();
+        }
+
+        // Course search
+        const search=document.getElementById('course-search');
+        if (search) {
+            search.addEventListener('input',()=>{
+                const q=search.value.toLowerCase();
+                grid.querySelectorAll('.course-card').forEach(card=>{
+                    card.style.display=card.textContent.toLowerCase().includes(q)?'':'none';
+                });
+            });
+        }
+    } catch(e) { showToast('Failed to load courses','error'); console.error(e); }
 }
 
 function setupForumInteractions() {
-    document.querySelectorAll('.forum-post-form').forEach(form => {
-        form.addEventListener('submit', (e) => {
+    document.querySelectorAll('.forum-post-form').forEach(f=>{
+        f.addEventListener('submit',e=>{
             e.preventDefault();
-            const msg = form.querySelector('textarea').value.trim();
-            if (!msg) { showToast('Please enter a message', 'error'); return; }
-            showToast('Post submitted!', 'success');
-            form.querySelector('textarea').value = '';
-            state.points += 5;
-            if (state.points >= 50) awardBadge('Forum Contributor');
+            const msg=f.querySelector('textarea').value.trim();
+            if (!msg) return;
+            showToast('Post submitted!','success');
+            f.querySelector('textarea').value='';
+            state.points+=5; updateStats();
+            if (state.points>=50) awardBadge('Forum Contributor');
         });
     });
-    document.querySelectorAll('.forum-reply-form').forEach(form => {
-        form.addEventListener('submit', (e) => {
+    document.querySelectorAll('.forum-reply-form').forEach(f=>{
+        f.addEventListener('submit',e=>{
             e.preventDefault();
-            const msg = form.querySelector('textarea').value.trim();
-            if (!msg) { showToast('Please enter a reply', 'error'); return; }
-            showToast('Reply submitted!', 'success');
-            form.querySelector('textarea').value = '';
+            const msg=f.querySelector('textarea').value.trim();
+            if (!msg) return;
+            showToast('Reply posted!','success');
+            f.querySelector('textarea').value='';
         });
     });
 }
 
 // ── Chatbot ───────────────────────────────────────────────────────────────────
+function appendChatMsg(text, role) {
+    const c=document.getElementById('chat-container');
+    if (!c) return null;
+    const wrap=document.createElement('div');
+    wrap.className=`chat-msg chat-msg--${role}`;
+    wrap.innerHTML=`
+        <div class="chat-msg__avatar">${role==='ai'?'🤖':'👤'}</div>
+        <div class="chat-msg__bubble">${text}</div>`;
+    c.appendChild(wrap);
+    c.scrollTop=c.scrollHeight;
+    gsap.from(wrap,{opacity:0,y:12,duration:0.3});
+    return wrap.querySelector('.chat-msg__bubble');
+}
+
 async function sendChat() {
-    const chatInput     = document.getElementById('chat-input');
-    const chatContainer = document.getElementById('chat-container');
-    if (!chatInput || !chatContainer) return;
-    const message = chatInput.value.trim();
-    if (!message) return;
-
-    const userMsg = document.createElement('p');
-    userMsg.className = 'user';
-    userMsg.textContent = `${state.currentUser || 'You'}: ${message}`;
-    chatContainer.appendChild(userMsg);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-    gsap.from(userMsg, { opacity: 0, y: 10, duration: 0.3 });
-    chatInput.value = '';
-
-    const aiMsg = document.createElement('p');
-    aiMsg.className = 'ai';
-    aiMsg.textContent = 'AI: Thinking...';
-    chatContainer.appendChild(aiMsg);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
+    const input=document.getElementById('chat-input');
+    if (!input) return;
+    const msg=input.value.trim();
+    if (!msg) return;
+    input.value='';
+    appendChatMsg(msg,'user');
+    const bubble=appendChatMsg('','ai');
+    if (bubble) bubble.classList.add('typing');
     try {
         if (state.offline) {
-            aiMsg.textContent = 'AI: You are offline. Your message will be sent when you reconnect.';
-            cacheRequest(`${APP_CONFIG.pyBase}/api/chat`, { message, user: state.currentUser });
+            if (bubble) { bubble.classList.remove('typing'); bubble.textContent='You are offline. Message queued.'; }
+            cacheRequest(`${APP_CONFIG.pyBase}/api/chat`,{message:msg,user:state.currentUser});
         } else {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(state.token ? { Authorization: `Bearer ${state.token}` } : {})
-                },
-                body: JSON.stringify({ message })
-            });
-            const data = await res.json();
-            aiMsg.textContent = `AI: ${data.response || "I'm not sure how to answer that."}`;
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/chat`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json',...(state.token?{Authorization:`Bearer ${state.token}`}:{})},
+                body:JSON.stringify({message:msg})});
+            const d=await res.json();
+            if (bubble) { bubble.classList.remove('typing'); bubble.textContent=d.response||"I'm not sure. Try rephrasing!"; }
         }
-    } catch (e) {
-        aiMsg.textContent = 'AI: Sorry, I could not connect to the server.';
-        console.error('Chat error:', e);
+    } catch(e) {
+        if (bubble) { bubble.classList.remove('typing'); bubble.textContent='Connection error. Please try again.'; }
     }
-    gsap.from(aiMsg, { opacity: 0, y: 10, duration: 0.3 });
-    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 // ── Quizzes ───────────────────────────────────────────────────────────────────
 async function loadQuizzes() {
-    const quizDiv = document.getElementById('quiz-content');
-    if (!quizDiv) return;
+    const qDiv=document.getElementById('quiz-questions');
+    if (!qDiv) return;
     try {
-        let quizzes = mockQuizzes;
-        if (!state.offline && state.token) {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/quizzes`, {
-                headers: { Authorization: `Bearer ${state.token}` }
-            });
-            const data = await res.json();
-            if (data.success && data.quizzes?.length) { mockQuizzes = data.quizzes; quizzes = data.quizzes; }
+        let quizzes=mockQuizzes;
+        if (!state.offline&&state.token) {
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/quizzes`,{headers:{Authorization:`Bearer ${state.token}`}});
+            const d=await res.json();
+            if (d.success&&d.quizzes?.length) { mockQuizzes=d.quizzes; quizzes=d.quizzes; }
         }
-
-        quizDiv.innerHTML = '<div class="quiz-timer">Time: <span id="timer">60</span>s</div>';
-        quizzes.forEach((quiz, i) => {
-            quizDiv.innerHTML += `
-                <div class="quiz-card" role="group" aria-label="Question ${i + 1}">
-                    <p><strong>Q${i + 1}:</strong> ${quiz.question}</p>
-                    ${quiz.options.map((opt, j) => `
+        qDiv.innerHTML=quizzes.map((q,i)=>`
+            <div class="quiz-card" role="group" aria-label="Question ${i+1}">
+                <p><strong>Q${i+1}:</strong> ${q.question}</p>
+                <div class="quiz-options">
+                    ${q.options.map((o,j)=>`
                         <label class="quiz-option">
-                            <input type="radio" name="quiz${i}" value="${j}" aria-label="${opt}">
-                            <span>${opt}</span>
+                            <input type="radio" name="quiz${i}" value="${j}" aria-label="${o}">
+                            <span>${o}</span>
                         </label>`).join('')}
-                </div>`;
-        });
-        gsap.from('.quiz-card', { opacity: 0, y: 20, stagger: 0.1, duration: 0.5 });
+                </div>
+            </div>`).join('');
+        gsap.from('.quiz-card',{opacity:0,y:20,stagger:0.1,duration:0.5});
 
+        // Timer
         clearInterval(state.quizTimer);
-        let timeLeft = 60;
-        const timerEl = document.getElementById('timer');
-        timerEl.textContent = timeLeft;
-        state.quizTimer = setInterval(() => {
-            timeLeft--;
-            timerEl.textContent = timeLeft;
-            if (timeLeft <= 10) timerEl.style.color = 'hsl(0,80%,50%)';
-            if (timeLeft <= 0) { clearInterval(state.quizTimer); submitQuiz(); }
-        }, 1000);
-    } catch (e) {
-        showToast('Failed to load quizzes', 'error');
-        quizDiv.innerHTML = '<p>Unable to load quizzes</p>';
-    }
+        let t=60;
+        const timerEl=document.getElementById('timer');
+        const timerDisplay=document.getElementById('quiz-timer-display');
+        if (timerEl) timerEl.textContent=t;
+        state.quizTimer=setInterval(()=>{
+            t--;
+            if (timerEl) timerEl.textContent=t;
+            if (t<=10) timerDisplay?.classList.add('urgent');
+            if (t<=0) { clearInterval(state.quizTimer); submitQuiz(); }
+        },1000);
+    } catch(e) { showToast('Failed to load quizzes','error'); qDiv.innerHTML='<p>Unable to load quizzes</p>'; }
 }
 
 async function submitQuiz(event) {
-    // Guard: timer calls this with no argument
     if (event) event.preventDefault();
     clearInterval(state.quizTimer);
+    document.getElementById('quiz-timer-display')?.classList.remove('urgent');
 
-    const answers = [];
-    document.querySelectorAll('#quiz-content input[type="radio"]:checked').forEach(input => {
-        answers.push({
-            questionIndex:  parseInt(input.name.replace('quiz', '')),
-            question_id:    mockQuizzes[parseInt(input.name.replace('quiz', ''))]?.id,
-            answer:         parseInt(input.value)
-        });
+    const answers=[];
+    document.querySelectorAll('#quiz-content input[type="radio"]:checked').forEach(inp=>{
+        const idx=parseInt(inp.name.replace('quiz',''));
+        answers.push({questionIndex:idx,question_id:mockQuizzes[idx]?.id,answer:parseInt(inp.value)});
     });
-
-    if (answers.length === 0) { showModal('Please select at least one answer'); return; }
+    if (!answers.length) { showModal('Please select at least one answer','⚠️'); return; }
 
     try {
-        let score = 0;
-        if (!state.offline && state.token) {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/submit-quiz`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${state.token}`
-                },
-                body: JSON.stringify({ answers })
-            });
-            const data = await res.json();
-            if (data.success) {
-                score = data.score;
-                state.points += data.points_earned || 0;
-            }
+        let score=0;
+        if (!state.offline&&state.token) {
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/submit-quiz`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json',Authorization:`Bearer ${state.token}`},
+                body:JSON.stringify({answers})});
+            const d=await res.json();
+            if (d.success) { score=d.score; state.points+=d.points_earned||0; }
         } else {
-            answers.forEach(a => {
-                if (mockQuizzes[a.questionIndex]?.correctAnswer === a.answer) score += 50;
-            });
-            const pts = Math.round(score / 10);
-            state.points += pts;
-            if (state.offline) cacheRequest(`${APP_CONFIG.pyBase}/api/submit-quiz`, { answers });
+            answers.forEach(a=>{ if (mockQuizzes[a.questionIndex]?.correctAnswer===a.answer) score+=50; });
+            state.points+=Math.round(score/10);
+            if (state.offline) cacheRequest(`${APP_CONFIG.pyBase}/api/submit-quiz`,{answers});
         }
 
-        showModal(`Quiz submitted! Score: ${score}% 🎉`);
+        // Show result in score display
+        const sd=document.getElementById('quiz-score-display');
+        const sv=document.getElementById('quiz-score-val');
+        if (sd&&sv) { sv.textContent=`${score}%`; sd.hidden=false; }
+
+        showModal(`Quiz complete! Score: ${score}% 🎉`,'🏆');
         playSound('success');
-        if (score >= 80) awardBadge('Quiz Champion');
+        if (score>=80) awardBadge('Quiz Champion');
+        updateStats();
         loadDashboard();
-    } catch (e) {
-        showModal('Failed to submit quiz');
-        console.error('Quiz submit error:', e);
-    }
+    } catch(e) { showModal('Failed to submit quiz','❌'); console.error(e); }
 }
 
-// ── Content Upload ────────────────────────────────────────────────────────────
+// ── Upload ────────────────────────────────────────────────────────────────────
 function setupDragAndDrop() {
-    const dropZone = document.getElementById('content-upload-form');
-    if (!dropZone) return;
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-active'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-active');
-        const file = e.dataTransfer.files[0];
-        if (file && file.type === 'text/plain') {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('content-body').value = ev.target.result;
-                showToast('File loaded successfully', 'success');
-            };
-            reader.onerror = () => showToast('Failed to read file', 'error');
-            reader.readAsText(file);
-        } else {
-            showToast('Please drop a .txt file', 'error');
-        }
+    const zone=document.getElementById('dropzone');
+    const fileInput=document.getElementById('file-input');
+    const body=document.getElementById('content-body');
+    if (!zone||!body) return;
+
+    zone.addEventListener('click',()=>fileInput?.click());
+    fileInput?.addEventListener('change',e=>{
+        const f=e.target.files[0];
+        if (f&&f.type==='text/plain') readFile(f);
+        else showToast('Please select a .txt file','error');
     });
+    zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-active');});
+    zone.addEventListener('dragleave',()=>zone.classList.remove('drag-active'));
+    zone.addEventListener('drop',e=>{
+        e.preventDefault(); zone.classList.remove('drag-active');
+        const f=e.dataTransfer.files[0];
+        if (f&&f.type==='text/plain') readFile(f);
+        else showToast('Please drop a .txt file','error');
+    });
+
+    function readFile(f) {
+        const r=new FileReader();
+        r.onload=ev=>{ body.value=ev.target.result; showToast('File loaded!','success'); updateCharCount(); };
+        r.onerror=()=>showToast('Failed to read file','error');
+        r.readAsText(f);
+    }
+
+    // Char counter
+    body.addEventListener('input',updateCharCount);
+    function updateCharCount() {
+        const cc=document.getElementById('char-count');
+        if (cc) cc.textContent=`${body.value.length} characters`;
+    }
 }
 
 async function uploadContent(event) {
     if (event) event.preventDefault();
-    if (state.userType !== 'tutor') {
-        showToast('Only tutors can upload content', 'error');
-        playSound('error');
-        return;
-    }
-    const title = document.getElementById('content-title').value.trim();
-    const body  = document.getElementById('content-body').value.trim();
-    if (!title || !body) { showToast('Please fill in all fields', 'error'); return; }
-
+    if (state.userType!=='tutor') { showToast('Only tutors can upload content','error'); return; }
+    const title=document.getElementById('content-title').value.trim();
+    const body=document.getElementById('content-body').value.trim();
+    if (!title||!body) { showToast('Please fill in all fields','error'); return; }
     try {
         if (!state.offline) {
-            const res = await fetch(`${APP_CONFIG.phpBase}?action=upload-content`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(state.token ? { Authorization: `Bearer ${state.token}` } : {})
-                },
-                body: JSON.stringify({ title, body, uploaded_by: state.userId })
-            });
-            const data = await res.json();
-            if (!data.success) { showToast(data.error || 'Upload failed', 'error'); return; }
+            const res=await fetch(`${APP_CONFIG.phpBase}?action=upload-content`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json',...(state.token?{Authorization:`Bearer ${state.token}`}:{})},
+                body:JSON.stringify({title,body,uploaded_by:state.userId})});
+            const d=await res.json();
+            if (!d.success) { showToast(d.error||'Upload failed','error'); return; }
         } else {
-            cacheRequest(`${APP_CONFIG.phpBase}?action=upload-content`, { title, body, uploaded_by: state.userId });
+            cacheRequest(`${APP_CONFIG.phpBase}?action=upload-content`,{title,body,uploaded_by:state.userId});
         }
-        state.points += 10;
-        showToast('Content uploaded! (+10 points)', 'success');
-        playSound('success');
-        document.getElementById('content-title').value = '';
-        document.getElementById('content-body').value  = '';
+        state.points+=10; updateStats();
+        showToast('Content uploaded! +10 pts 🎉','success'); playSound('success');
+        document.getElementById('content-title').value='';
+        document.getElementById('content-body').value='';
+        document.getElementById('char-count').textContent='0 characters';
         awardBadge('Content Creator');
-    } catch (e) {
-        showToast('Failed to upload content', 'error');
-        console.error('Upload error:', e);
-    }
+    } catch(e) { showToast('Upload failed','error'); console.error(e); }
 }
 
 function previewContent() {
-    const title   = document.getElementById('content-title').value.trim();
-    const body    = document.getElementById('content-body').value.trim();
-    const preview = document.getElementById('content-preview');
-    if (!title || !body || !preview) { showToast('Please fill in all fields', 'error'); return; }
-    preview.innerHTML = `<h4>${title}</h4><p>${body}</p>`;
-    preview.classList.add('active');
-    gsap.from(preview, { opacity: 0, y: 20, duration: 0.5 });
-}
-
-// ── Real-Time Collaboration ───────────────────────────────────────────────────
-function setupRealTimeCollaboration() {
-    const contentBody = document.getElementById('content-body');
-    if (!contentBody) return;
-
-    const wsUrl = window.APP_CONFIG?.wsUrl;
-    if (!wsUrl) {
-        console.info('WebSocket URL not configured — real-time collaboration disabled');
-        return;
-    }
-
-    let ws;
-    try {
-        ws = new WebSocket(wsUrl);
-        ws.onopen  = () => console.info('WebSocket connected');
-        ws.onclose = () => console.info('WebSocket disconnected');
-        ws.onerror = () => { console.warn('WebSocket error — collaboration disabled'); ws = null; };
-        ws.onmessage = (e) => {
-            try {
-                const data = JSON.parse(e.data);
-                if (data.content && data.user !== state.currentUser) {
-                    contentBody.value = data.content;
-                    showToast(`${data.user} updated the content`, 'success');
-                }
-            } catch { /* ignore malformed messages */ }
-        };
-    } catch (e) {
-        console.warn('WebSocket unavailable — collaboration disabled', e);
-        return;
-    }
-
-    let debounce;
-    contentBody.addEventListener('input', () => {
-        clearTimeout(debounce);
-        debounce = setTimeout(() => {
-            if (ws?.readyState === WebSocket.OPEN) {
-                try { ws.send(JSON.stringify({ content: contentBody.value, user: state.currentUser })); }
-                catch { /* ignore send errors */ }
-            }
-        }, 300);
-    });
+    const title=document.getElementById('content-title').value.trim();
+    const body=document.getElementById('content-body').value.trim();
+    const preview=document.getElementById('content-preview');
+    const previewBody=document.getElementById('content-preview-body');
+    if (!title||!body) { showToast('Fill in title and body first','error'); return; }
+    if (previewBody) previewBody.innerHTML=`<h4 style="margin-bottom:var(--sp-3)">${title}</h4><p>${body}</p>`;
+    if (preview) { preview.hidden=false; gsap.from(preview,{opacity:0,y:16,duration:0.4}); }
 }
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 async function loadAnalytics() {
-    if (state.userType !== 'tutor') {
-        showToast('Only tutors can view analytics', 'error');
-        return;
-    }
-    const canvas = document.getElementById('progress-chart');
+    if (state.userType!=='tutor') { showToast('Only tutors can view analytics','error'); return; }
+    const canvas=document.getElementById('progress-chart');
     if (!canvas) return;
-
-    // Destroy existing chart to prevent "Canvas already in use" error
-    const existing = Chart.getChart(canvas);
+    const existing=Chart.getChart(canvas);
     if (existing) existing.destroy();
 
     try {
-        let students = ['User1', 'User2', 'User3'];
-        let progress = [70, 85, 60];
-
-        if (!state.offline && state.token) {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/analytics`, {
-                headers: { Authorization: `Bearer ${state.token}` }
-            });
-            const data = await res.json();
-            if (data.success) { students = data.students; progress = data.progress; }
+        let students=['Alice','Bob','Carol','Dave','Eve'];
+        let progress=[85,72,91,60,78];
+        if (!state.offline&&state.token) {
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/analytics`,{headers:{Authorization:`Bearer ${state.token}`}});
+            const d=await res.json();
+            if (d.success) { students=d.students; progress=d.progress; }
         }
 
-        new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: students,
-                datasets: [{
-                    label: 'Progress (%)',
-                    data: progress,
-                    backgroundColor: students.map((_, i) =>
-                        `hsla(${(i * 60 + 200) % 360}, 70%, 55%, 0.8)`),
-                    borderColor: students.map((_, i) =>
-                        `hsl(${(i * 60 + 200) % 360}, 70%, 45%)`),
-                    borderWidth: 2,
-                    borderRadius: 8,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-color') } },
-                    tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}%` } }
-                },
-                scales: {
-                    y: { beginAtZero: true, max: 100, ticks: { color: 'var(--text-muted)' } },
-                    x: { ticks: { color: 'var(--text-muted)' } }
-                },
-                animation: { duration: 800, easing: 'easeOutQuart' }
-            }
-        });
-        gsap.from(canvas, { opacity: 0, scale: 0.95, duration: 0.5 });
-    } catch (e) {
-        showToast('Failed to load analytics', 'error');
-        canvas.parentElement.innerHTML = '<p>Unable to load analytics</p>';
-    }
+        const colors=students.map((_,i)=>`hsla(${(i*55+200)%360},70%,60%,0.85)`);
+        new Chart(canvas.getContext('2d'),{
+            type:state.chartType||'bar',
+            data:{labels:students,datasets:[{
+                label:'Progress (%)',data:progress,
+                backgroundColor:colors,borderColor:colors.map(c=>c.replace('0.85','1')),
+                borderWidth:2,borderRadius:8,fill:state.chartType==='line',tension:0.4}]},
+            options:{
+                responsive:true,maintainAspectRatio:false,
+                plugins:{
+                    legend:{labels:{color:'var(--text-2)',font:{family:'Inter'}}},
+                    tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}%`}}},
+                scales:{
+                    y:{beginAtZero:true,max:100,ticks:{color:'var(--text-3)'},grid:{color:'var(--border)'}},
+                    x:{ticks:{color:'var(--text-3)'},grid:{color:'var(--border)'}}},
+                animation:{duration:800,easing:'easeOutQuart'}}});
+
+        // Quick stats
+        const statList=document.getElementById('analytics-stat-list');
+        if (statList) {
+            const avg=Math.round(progress.reduce((s,v)=>s+v,0)/progress.length);
+            const top=students[progress.indexOf(Math.max(...progress))];
+            statList.innerHTML=[
+                {label:'Average Progress',value:`${avg}%`},
+                {label:'Top Student',value:top},
+                {label:'Total Students',value:students.length},
+                {label:'Above 80%',value:progress.filter(p=>p>=80).length}
+            ].map(s=>`<div class="analytics-stat-item">
+                <span class="analytics-stat-item__label">${s.label}</span>
+                <span class="analytics-stat-item__value">${s.value}</span>
+            </div>`).join('');
+        }
+        gsap.from(canvas,{opacity:0,scale:0.95,duration:0.5});
+    } catch(e) { showToast('Failed to load analytics','error'); console.error(e); }
 }
 
 // ── Feedback ──────────────────────────────────────────────────────────────────
-async function submitFeedback(event) {
-    event.preventDefault();
-    const type    = document.getElementById('feedback-type').value;
-    const message = document.getElementById('feedback-message').value.trim();
-    if (!message) { showToast('Please enter a message', 'error'); return; }
+function loadFeedback() {
+    const form=document.getElementById('feedback-form-el');
+    if (!form||form.dataset.bound) return;
+    form.dataset.bound='1';
+    form.addEventListener('submit',submitFeedback);
 
-    try {
-        if (!state.offline) {
-            const res = await fetch(`${APP_CONFIG.phpBase}?action=feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(state.token ? { Authorization: `Bearer ${state.token}` } : {})
-                },
-                body: JSON.stringify({ user_id: state.userId || 0, type, message })
-            });
-            const data = await res.json();
-            if (!data.success) { showToast(data.error || 'Feedback failed', 'error'); return; }
-        } else {
-            cacheRequest(`${APP_CONFIG.phpBase}?action=feedback`, { user_id: state.userId || 0, type, message });
-        }
-        showToast('Feedback submitted! Thank you 🙏', 'success');
-        document.getElementById('feedback-message').value = '';
-        state.points += 2;
-        if (state.points >= 20) awardBadge('Feedback Star');
-    } catch (e) {
-        showToast('Failed to submit feedback', 'error');
-        console.error('Feedback error:', e);
-    }
+    // Feedback type buttons
+    document.querySelectorAll('.feedback-type-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('.feedback-type-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            const sel=document.getElementById('feedback-type');
+            if (sel) sel.value=btn.dataset.type;
+        });
+    });
+
+    // Star rating
+    const stars=document.querySelectorAll('.star');
+    stars.forEach(star=>{
+        star.addEventListener('click',()=>{
+            state.starRating=parseInt(star.dataset.val);
+            stars.forEach(s=>s.classList.toggle('active',parseInt(s.dataset.val)<=state.starRating));
+        });
+        star.addEventListener('mouseenter',()=>{
+            const v=parseInt(star.dataset.val);
+            stars.forEach(s=>s.classList.toggle('active',parseInt(s.dataset.val)<=v));
+        });
+        star.addEventListener('mouseleave',()=>{
+            stars.forEach(s=>s.classList.toggle('active',parseInt(s.dataset.val)<=state.starRating));
+        });
+    });
+    gsap.from(form,{opacity:0,y:20,duration:0.5});
 }
 
-function loadFeedback() {
-    const form = document.querySelector('.feedback form');
-    if (form && !form.dataset.bound) {
-        form.addEventListener('submit', submitFeedback);
-        form.dataset.bound = '1';
-        gsap.from(form, { opacity: 0, y: 20, duration: 0.5 });
-    }
+async function submitFeedback(event) {
+    event.preventDefault();
+    const type=document.getElementById('feedback-type').value;
+    const message=document.getElementById('feedback-message').value.trim();
+    if (!message) { showToast('Please enter a message','error'); return; }
+    try {
+        if (!state.offline) {
+            const res=await fetch(`${APP_CONFIG.phpBase}?action=feedback`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json',...(state.token?{Authorization:`Bearer ${state.token}`}:{})},
+                body:JSON.stringify({user_id:state.userId||0,type,message,rating:state.starRating})});
+            const d=await res.json();
+            if (!d.success) { showToast(d.error||'Feedback failed','error'); return; }
+        } else {
+            cacheRequest(`${APP_CONFIG.phpBase}?action=feedback`,{user_id:state.userId||0,type,message});
+        }
+        showToast('Feedback submitted! Thank you 🙏','success');
+        document.getElementById('feedback-message').value='';
+        state.points+=2; state.starRating=0;
+        document.querySelectorAll('.star').forEach(s=>s.classList.remove('active'));
+        updateStats();
+        if (state.points>=20) awardBadge('Feedback Star');
+    } catch(e) { showToast('Feedback failed','error'); console.error(e); }
 }
 
 // ── Help ──────────────────────────────────────────────────────────────────────
 function loadHelp() {
-    document.querySelectorAll('.help-content details').forEach((d, i) => {
-        gsap.from(d, { opacity: 0, y: 20, duration: 0.5, delay: i * 0.1 });
-    });
+    gsap.from('.faq-item',{opacity:0,y:16,stagger:0.08,duration:0.4});
 }
 
 // ── Repository ────────────────────────────────────────────────────────────────
 async function loadRepository() {
-    const repoDiv = document.getElementById('content-repo');
-    if (!repoDiv) return;
+    const grid=document.getElementById('repo-grid');
+    if (!grid) return;
     try {
-        let items = [
-            { title: 'Python Variables',    description: 'Learn about variables in Python.' },
-            { title: 'Integration Basics',  description: 'Understand integration techniques.' },
-            { title: 'HTML Basics',         description: 'Introduction to web structure.' },
-            { title: 'Linked Lists',        description: 'Concepts and implementation.' },
-            { title: 'Linear Regression',   description: 'ML model fundamentals.' },
+        let items=[
+            {title:'Python Variables',description:'Learn about variables, types, and scope in Python.'},
+            {title:'Integration Basics',description:'Understand definite and indefinite integration techniques.'},
+            {title:'HTML Fundamentals',description:'Introduction to web structure with semantic HTML5.'},
+            {title:'Linked Lists',description:'Concepts, implementation, and complexity analysis.'},
+            {title:'Linear Regression',description:'ML model fundamentals and gradient descent.'},
+            {title:'CSS Grid & Flexbox',description:'Modern layout techniques for responsive design.'},
         ];
-
-        if (!state.offline && state.token) {
-            const res = await fetch(`${APP_CONFIG.pyBase}/api/repository`, {
-                headers: { Authorization: `Bearer ${state.token}` }
-            });
-            const data = await res.json();
-            if (data.success && data.items?.length) items = data.items;
+        if (!state.offline&&state.token) {
+            const res=await fetch(`${APP_CONFIG.pyBase}/api/repository`,{headers:{Authorization:`Bearer ${state.token}`}});
+            const d=await res.json();
+            if (d.success&&d.items?.length) items=d.items;
         }
+        grid.innerHTML=items.map(item=>`
+            <div class="repo-item" role="listitem">
+                <div class="repo-item__title">${item.title}</div>
+                <div class="repo-item__desc">${item.description}</div>
+            </div>`).join('');
+        gsap.from('.repo-item',{opacity:0,y:20,stagger:0.07,duration:0.4});
 
-        repoDiv.innerHTML = '<h2>Educational Content Repository</h2>' +
-            items.map(item => `
-                <div class="content-item" role="listitem">
-                    <strong>${item.title}</strong>: ${item.description}
-                </div>`).join('');
-        gsap.from('.content-item', { opacity: 0, y: 20, stagger: 0.1, duration: 0.5 });
-    } catch (e) {
-        showToast('Failed to load repository', 'error');
-        repoDiv.innerHTML = '<h2>Educational Content Repository</h2><p>Unable to load content</p>';
-    }
+        // Repo search
+        const search=document.getElementById('repo-search');
+        if (search) {
+            search.addEventListener('input',()=>{
+                const q=search.value.toLowerCase();
+                grid.querySelectorAll('.repo-item').forEach(item=>{
+                    item.style.display=item.textContent.toLowerCase().includes(q)?'':'none';
+                });
+            });
+        }
+    } catch(e) { showToast('Failed to load repository','error'); grid.innerHTML='<p>Unable to load content</p>'; }
 }
 
-// ── Data Loader ───────────────────────────────────────────────────────────────
+// ── WebSocket collaboration ───────────────────────────────────────────────────
+function setupRealTimeCollaboration() {
+    const body=document.getElementById('content-body');
+    if (!body) return;
+    const wsUrl=window.APP_CONFIG?.wsUrl;
+    if (!wsUrl) return;
+    let ws;
+    try {
+        ws=new WebSocket(wsUrl);
+        ws.onerror=()=>{ws=null;};
+        ws.onmessage=e=>{
+            try {
+                const d=JSON.parse(e.data);
+                if (d.content&&d.user!==state.currentUser) { body.value=d.content; showToast(`${d.user} updated content`,'info'); }
+            } catch {}
+        };
+    } catch { return; }
+    let deb;
+    body.addEventListener('input',()=>{
+        clearTimeout(deb);
+        deb=setTimeout(()=>{
+            if (ws?.readyState===WebSocket.OPEN)
+                try{ws.send(JSON.stringify({content:body.value,user:state.currentUser}));}catch{}
+        },300);
+    });
+}
+
+// ── Data loader ───────────────────────────────────────────────────────────────
 async function loadData() {
     try {
-        const res = await fetch('Datasets/tutoring_system_data.json');
+        const res=await fetch('Datasets/tutoring_system_data.json');
         if (!res.ok) return;
-        const data = await res.json();
-        if (data.courses?.length)  mockCourses = data.courses;
-        if (data.quizzes?.length)  mockQuizzes = data.quizzes;
-        if (data.interactions)     state.interactions = data.interactions;
-        if (data.feedback)         state.feedbackData = data.feedback;
-        if (data.analytics)        state.analyticsData = data.analytics;
-    } catch { /* dataset optional — silently ignore */ }
+        const d=await res.json();
+        if (d.courses?.length) mockCourses=d.courses;
+        if (d.quizzes?.length) mockQuizzes=d.quizzes;
+    } catch {}
 }
 
-// ── Initialisation ────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    // Restore theme
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+    // Theme
+    document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');
 
-    // Init subsystems
+    // Subsystems
     initializeSounds();
     setupDragAndDrop();
     initParticles();
@@ -987,41 +869,68 @@ document.addEventListener('DOMContentLoaded', () => {
     setupOfflineSupport();
     setupRealTimeCollaboration();
     setupSwipeNavigation();
+    setupKeyboardShortcuts();
     loadData();
     loadRepository();
 
-    // Theme toggle
-    document.querySelector('.theme-toggle')?.addEventListener('click', toggleTheme);
+    // Controls
+    document.querySelector('.theme-toggle')?.addEventListener('click',toggleTheme);
+    document.querySelector('.sidebar-toggle')?.addEventListener('click',toggleSidebar);
+    document.querySelector('.sidebar__close')?.addEventListener('click',closeSidebar);
+    document.querySelector('.sidebar-overlay')?.addEventListener('click',closeSidebar);
+    document.getElementById('modal-close')?.addEventListener('click',closeModal);
 
-    // Sidebar toggle
-    document.querySelector('.sidebar-toggle')?.addEventListener('click', toggleSidebar);
-
-    // Modal close
-    document.querySelector('#modal button')?.addEventListener('click', closeModal);
-
-    // Login form
-    document.querySelector('.login-form form')?.addEventListener('submit', login);
-
-    // Chat send button — by stable ID
-    document.getElementById('send-btn')?.addEventListener('click', sendChat);
-    document.getElementById('chat-input')?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+    // Login
+    document.getElementById('login-form-el')?.addEventListener('submit',login);
+    document.querySelectorAll('.role-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            const sel=document.getElementById('user-type');
+            if (sel) sel.value=btn.dataset.role;
+        });
+    });
+    document.querySelector('.toggle-pw')?.addEventListener('click',()=>{
+        const pw=document.getElementById('password');
+        if (pw) pw.type=pw.type==='password'?'text':'password';
     });
 
-    // Quiz form
-    document.getElementById('quiz-content')?.addEventListener('submit', submitQuiz);
+    // Chat
+    document.getElementById('send-btn')?.addEventListener('click',sendChat);
+    document.getElementById('chat-input')?.addEventListener('keydown',e=>{
+        if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}
+    });
+    document.querySelectorAll('.suggestion-chip').forEach(chip=>{
+        chip.addEventListener('click',()=>{
+            const input=document.getElementById('chat-input');
+            if (input){input.value=chip.dataset.msg;sendChat();}
+        });
+    });
 
-    // Upload buttons — by stable ID
-    document.getElementById('upload-btn')?.addEventListener('click', uploadContent);
-    document.getElementById('preview-btn')?.addEventListener('click', previewContent);
+    // Quiz
+    document.getElementById('quiz-content')?.addEventListener('submit',submitQuiz);
 
-    // Navigation delegation
-    document.body.addEventListener('click', (e) => {
-        const link = e.target.closest('.nav a, .sidebar a');
-        if (link) {
+    // Upload
+    document.getElementById('upload-btn')?.addEventListener('click',uploadContent);
+    document.getElementById('preview-btn')?.addEventListener('click',previewContent);
+
+    // Analytics chart type
+    document.querySelectorAll('.chart-type-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('.chart-type-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            state.chartType=btn.dataset.type;
+            if (document.getElementById('analytics')?.classList.contains('active')) loadAnalytics();
+        });
+    });
+
+    // Navigation — top nav + sidebar
+    document.body.addEventListener('click',e=>{
+        const link=e.target.closest('.topnav__link,.nav-item');
+        if (link){
             e.preventDefault();
-            const sectionId = link.getAttribute('href')?.replace('#', '') || 'login-form';
-            showSection(sectionId);
+            const id=link.getAttribute('href')?.replace('#','')||link.dataset.section||'login-form';
+            showSection(id);
         }
     });
 });
