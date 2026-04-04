@@ -66,6 +66,7 @@
       <a href="#content-repo"           class="snav-item" data-icon="🗂️" data-section="content-repo">Repository</a>
       <a href="#feedback"               class="snav-item" data-icon="💬" data-section="feedback">Feedback</a>
       <a href="#help"                   class="snav-item" data-icon="❓" data-section="help">Help</a>
+      <button class="snav-item" id="sidebar-logout" data-icon="🚪" style="background:none;border:none;cursor:pointer;color:var(--danger);width:100%;text-align:left;font-family:var(--font);font-size:.88rem;font-weight:500;display:none;">Sign Out</button>
     </nav>
 
     <div class="sidebar__xp-bar">
@@ -99,6 +100,28 @@
         <a href="#feedback"               class="tnav-link" data-section="feedback">Feedback</a>
         <a href="#help"                   class="tnav-link" data-section="help">Help</a>
       </nav>
+      <!-- Profile dropdown (shown when logged in) -->
+      <div class="profile-dropdown" id="profile-dropdown" aria-label="User menu">
+        <button class="notif-btn" id="notif-btn" aria-label="Notifications" title="Notifications">
+          🔔<span class="notif-badge" id="notif-badge"></span>
+        </button>
+        <div class="profile-trigger" id="profile-trigger" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+          <div class="profile-trigger__av" id="header-avatar">?</div>
+          <span class="profile-trigger__name" id="header-username">User</span>
+          <span class="profile-trigger__caret">▼</span>
+        </div>
+        <div class="profile-menu" id="profile-menu" role="menu">
+          <div class="profile-menu__header">
+            <div class="profile-menu__user" id="menu-username">—</div>
+            <div class="profile-menu__role" id="menu-role">—</div>
+            <div class="profile-menu__pts" id="menu-pts">0 pts</div>
+          </div>
+          <button class="profile-menu__item" onclick="showSection('dashboard')" role="menuitem">🏠 Dashboard</button>
+          <button class="profile-menu__item" onclick="showSection('feedback')" role="menuitem">💬 Feedback</button>
+          <div class="profile-menu__divider"></div>
+          <button class="profile-menu__item profile-menu__item--danger" id="logout-btn" role="menuitem">🚪 Sign Out</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -520,6 +543,25 @@
     </section>
 
   </main>
+
+  <!-- ── Course Modal ──────────────────────────────────────────────────────── -->
+  <div id="course-modal-veil" class="course-modal-veil" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="course-modal-title">
+    <div class="course-modal" id="course-modal">
+      <button class="course-modal__close" id="course-modal-close" aria-label="Close">✕</button>
+      <span class="course-modal__emoji" id="course-modal-emoji">📚</span>
+      <h2 class="course-modal__title" id="course-modal-title">Course</h2>
+      <p class="course-modal__desc" id="course-modal-desc"></p>
+      <div class="course-modal__section" id="course-modal-syllabus-wrap">
+        <h4>Syllabus</h4>
+        <ul class="course-modal__list" id="course-modal-syllabus"></ul>
+      </div>
+      <div class="course-modal__section" id="course-modal-assign-wrap">
+        <h4>Assignments</h4>
+        <ul class="course-modal__list" id="course-modal-assignments"></ul>
+      </div>
+      <button class="btn btn--primary enroll-btn" id="course-enroll-btn">✅ Enroll in Course</button>
+    </div>
+  </div>
 
   <!-- ── Modal ───────────────────────────────────────────────────────────── -->
   <div id="modal" class="modal-veil" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-msg">
