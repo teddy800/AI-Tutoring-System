@@ -2,7 +2,7 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-window.APP_CONFIG = { phpBase:'/php-api', pyBase:'/py-api', wsUrl:null };
+window.APP_CONFIG = { phpBase:'http://localhost:8080', pyBase:'http://localhost:5000', wsUrl:null };
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const S = {
