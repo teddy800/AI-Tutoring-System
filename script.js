@@ -1252,16 +1252,23 @@ function animateProgress(pct) {
 function renderCourseGrid(gridId, courses, showProgress=false, filter='all') {
     const grid = document.getElementById(gridId);
     if (!grid) return;
-    const filtered = filter === 'all' ? courses : courses.filter(c => c.difficulty === filter);
+    const filtered = filter === 'all' ? courses
+        : courses.filter(c => c.difficulty === filter || c.category === filter);
     const diffColor = {Beginner:'var(--success)',Intermediate:'var(--warning)',Advanced:'var(--danger)'};
     grid.innerHTML = filtered.map(c => {
         const enrolled = S.enrolled?.includes(c.id);
+        const students = c.students ? (c.students >= 1000 ? (c.students/1000).toFixed(1)+'k' : c.students) : '';
         return '<div class="course-card" data-id="' + c.id + '" role="gridcell" tabindex="0" aria-label="Open ' + c.title + '">' +
             '<span class="course-card__emoji">' + (c.emoji||'📚') + '</span>' +
             '<h3>' + c.title + '</h3>' +
             '<p>' + c.description + '</p>' +
-            (c.difficulty ? '<span style="font-size:var(--text-xs);font-weight:700;color:' + (diffColor[c.difficulty]||'var(--txt3)') + '">' + c.difficulty + ' · ' + (c.duration||'') + '</span>' : '') +
-            (c.rating ? '<span style="font-size:var(--text-xs);color:var(--warning);margin-left:var(--s2)">★ ' + c.rating + '</span>' : '') +
+            '<div style="display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s2)">' +
+            (c.difficulty ? '<span style="font-size:var(--text-xs);font-weight:700;color:' + (diffColor[c.difficulty]||'var(--txt3)') + '">' + c.difficulty + '</span>' : '') +
+            (c.duration ? '<span style="font-size:var(--text-xs);color:var(--txt3)">· ' + c.duration + '</span>' : '') +
+            (c.rating ? '<span style="font-size:var(--text-xs);color:var(--warning)">★ ' + c.rating + '</span>' : '') +
+            (students ? '<span style="font-size:var(--text-xs);color:var(--txt3);margin-left:auto">👥 ' + students + '</span>' : '') +
+            '</div>' +
+            (c.category ? '<span style="font-size:var(--text-xs);color:var(--p);margin-top:var(--s1);display:inline-block">' + c.category + '</span>' : '') +
             (enrolled ? '<div class="enrolled-tag">✅ Enrolled</div>' : '') +
             (showProgress ? '<div class="prog-label" style="margin-top:var(--s3)">Progress: ' + (c.progress||0) + '%</div><div class="prog-bar"><div class="prog-fill" style="width:0%" data-target="' + (c.progress||0) + '"></div></div>' : '') +
             '</div>';
@@ -1274,11 +1281,11 @@ function renderCourseGrid(gridId, courses, showProgress=false, filter='all') {
             });
         }, 200);
     }
-    if (window.gsap) gsap.from('#' + gridId + ' .course-card', {opacity:0,y:28,stagger:.08,duration:.5});
+    if (window.gsap) gsap.from('#' + gridId + ' .course-card', {opacity:0,y:28,stagger:.06,duration:.4});
     grid.querySelectorAll('.course-card').forEach(card => {
         card.addEventListener('click', () => {
             const id = parseInt(card.dataset.id);
-            const course = mockCourses.find(c => c.id === id);
+            const course = (S.courses?.length ? S.courses : mockCourses).find(c => c.id === id);
             if (course) openCourseModal(course);
         });
         card.addEventListener('keydown', e => { if (e.key === 'Enter') card.click(); });
@@ -1349,15 +1356,31 @@ async function loadCourseSection() {
     if (!grid) return;
     try {
         let courses = mockCourses;
+        let categories = [];
         if (!S.offline && S.token) {
             try {
                 const res = await fetch(APP_CONFIG.pyBase + '/api/courses', {headers:{Authorization:'Bearer ' + S.token}});
                 const d = await res.json();
                 if (d.success && d.courses?.length) { mockCourses = d.courses; courses = d.courses; }
+                if (d.categories?.length) categories = d.categories;
             } catch {}
         }
         S.courses = courses;
+
+        // Dynamically build category filter buttons
+        const filterBar = document.querySelector('.course-filter-bar');
+        if (filterBar && categories.length) {
+            const existing = filterBar.querySelectorAll('[data-course-filter]:not([data-course-filter="all"])');
+            existing.forEach(b => b.remove());
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn'; btn.dataset.courseFilter = cat; btn.textContent = cat;
+                filterBar.appendChild(btn);
+            });
+        }
+
         renderCourseGrid('course-grid', courses, false);
+
         // Course search
         const searchEl = document.getElementById('course-search');
         if (searchEl) {
@@ -1458,15 +1481,33 @@ async function loadQuizzes(filter='all') {
     if (!qDiv) return;
     try {
         let quizzes = mockQuizzes;
+        let topics = [];
         if (!S.offline && S.token) {
             try {
-                const res = await fetch(APP_CONFIG.pyBase + '/api/quizzes', {headers:{Authorization:'Bearer ' + S.token}});
+                const url = filter !== 'all'
+                    ? `${APP_CONFIG.pyBase}/api/quizzes?topic=${encodeURIComponent(filter)}&random=true&count=10`
+                    : `${APP_CONFIG.pyBase}/api/quizzes?random=true&count=10`;
+                const res = await fetch(url, {headers:{Authorization:'Bearer ' + S.token}});
                 const d = await res.json();
                 if (d.success && d.quizzes?.length) { mockQuizzes = d.quizzes; quizzes = d.quizzes; }
+                if (d.topics?.length) topics = d.topics;
             } catch {}
         }
+
+        // Dynamically build topic filter buttons
+        const filterBar = document.querySelector('.quiz-filter-bar');
+        if (filterBar && topics.length) {
+            const existing = filterBar.querySelectorAll('[data-quiz-filter]:not([data-quiz-filter="all"])');
+            existing.forEach(b => b.remove());
+            topics.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn'; btn.dataset.quizFilter = t; btn.textContent = t;
+                if (t === filter) btn.classList.add('active');
+                filterBar.appendChild(btn);
+            });
+        }
+
         const filtered = filter === 'all' ? quizzes : quizzes.filter(q => q.topic === filter);
-        const diffColor = {Easy:'var(--success)',Medium:'var(--warning)',Hard:'var(--danger)'};
         qDiv.innerHTML = filtered.map((q,i) =>
             '<div class="quiz-card" role="group" aria-label="Question ' + (i+1) + '">' +
             '<div style="display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s3)">' +
@@ -1476,25 +1517,26 @@ async function loadQuizzes(filter='all') {
             '</div>' +
             '<p class="quiz-card__q">' + q.question + '</p>' +
             '<div class="quiz-opts">' +
-            q.options.map((o,j) =>
+            (typeof q.options === 'string' ? JSON.parse(q.options) : q.options).map((o,j) =>
                 '<label class="quiz-opt"><input type="radio" name="q' + i + '" value="' + j + '" aria-label="' + o + '"><span>' + o + '</span></label>'
             ).join('') +
             '</div></div>'
         ).join('');
-        if (window.gsap) gsap.from('.quiz-card', {opacity:0,y:22,stagger:.1,duration:.5});
+        if (window.gsap) gsap.from('.quiz-card', {opacity:0,y:22,stagger:.08,duration:.4});
 
         // Timer
         clearInterval(S.quizTimer);
-        let t = 60;
+        let t = filtered.length * 30; // 30s per question
         const timerEl = document.getElementById('timer');
         const arc = document.getElementById('timer-arc');
         const ring = document.getElementById('timer-ring');
+        const maxT = t;
         if (arc) arc.style.strokeDasharray = TIMER_CIRCUMFERENCE;
         if (timerEl) timerEl.textContent = t;
         S.quizTimer = setInterval(() => {
             t--;
             if (timerEl) timerEl.textContent = t;
-            if (arc) arc.style.strokeDashoffset = TIMER_CIRCUMFERENCE * (1 - t/60);
+            if (arc) arc.style.strokeDashoffset = TIMER_CIRCUMFERENCE * (1 - t/maxT);
             if (t <= 10) { arc?.classList.add('urgent'); ring?.classList.add('urgent'); }
             if (t <= 0) { clearInterval(S.quizTimer); submitQuiz(); }
         }, 1000);
@@ -1524,11 +1566,23 @@ async function submitQuiz(event) {
 
     answers.forEach(a => {
         const opts = document.querySelectorAll('[name="q' + a.questionIndex + '"]');
+        const q = mockQuizzes[a.questionIndex];
+        const correctIdx = q?.correct_answer ?? q?.correctAnswer;
         opts.forEach(inp => {
             const lbl = inp.closest('.quiz-opt');
-            if (parseInt(inp.value) === mockQuizzes[a.questionIndex]?.correctAnswer) lbl?.classList.add('correct');
+            if (parseInt(inp.value) === correctIdx) lbl?.classList.add('correct');
             else if (parseInt(inp.value) === a.answer) lbl?.classList.add('wrong');
         });
+        // Show explanation
+        if (q?.explanation) {
+            const card = opts[0]?.closest('.quiz-card');
+            if (card && !card.querySelector('.quiz-explanation')) {
+                const exp = document.createElement('div');
+                exp.className = 'quiz-explanation';
+                exp.innerHTML = '💡 <strong>Explanation:</strong> ' + q.explanation;
+                card.appendChild(exp);
+            }
+        }
     });
 
     try {

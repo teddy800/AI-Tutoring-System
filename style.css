@@ -1609,3 +1609,12 @@ kbd {
   place-content: center;
 }
 #collab-overlay.active { display: grid; }
+
+/* ── Quiz explanation ──────────────────────────────────────────────────────── */
+.quiz-explanation {
+  margin-top: var(--s3); padding: var(--s3) var(--s4);
+  background: hsla(var(--h3),80%,58%,.1); border: 1px solid hsla(var(--h3),80%,58%,.25);
+  border-radius: var(--r-sm); font-size: var(--text-xs); color: var(--txt2);
+  line-height: 1.6; animation: modal-pop .3s var(--spring) both;
+}
+.quiz-explanation strong { color: var(--p3); }
