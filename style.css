@@ -191,7 +191,7 @@ a { color: inherit; text-decoration: none; }
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
-#particles-js { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#particles-js { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.55; }
 
 /* ── HUD ───────────────────────────────────────────────────────────────────── */
 .hud {
@@ -540,7 +540,7 @@ body.focus-mode .focus-mode-btn { display: flex; align-items: center; gap: var(-
 
 /* ── Main + Pages ──────────────────────────────────────────────────────────── */
 .main {
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; isolation: isolate;
   max-width: 1200px; margin: 0 auto;
   padding: var(--s8) var(--s6);
   display: flex; flex-direction: column; gap: var(--s8);
@@ -1431,16 +1431,68 @@ kbd {
 #cookie-banner p { font-size: var(--text-sm); color: var(--txt2); flex: 1; }
 #cookie-banner a { color: var(--p); text-decoration: underline; }
 
-/* ── Notification panel ────────────────────────────────────────────────────── */
-.notif-panel {
-  position: absolute; top: calc(100% + var(--s2)); right: 0;
-  min-width: 280px; background: var(--bg2); border: 1px solid var(--bdr2);
-  border-radius: var(--r); padding: var(--s3); z-index: 1600;
-  box-shadow: var(--shadow); backdrop-filter: blur(28px);
-  max-height: 320px; overflow-y: auto;
+/* ── Keyboard shortcut overlay ─────────────────────────────────────────────── */
+#shortcut-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3500;
+  background: hsla(0,0%,0%,.75); backdrop-filter: blur(8px);
+  place-content: center;
 }
+#shortcut-overlay.active { display: grid; }
+.shortcut-modal {
+  background: var(--bg2); border: 1px solid var(--bdr2);
+  border-radius: var(--r); padding: var(--s8);
+  max-width: 480px; width: 90%;
+  box-shadow: var(--shadow-xl);
+  animation: modal-pop .3s var(--spring) both;
+}
+.shortcut-modal h3 {
+  font-family: var(--font-h); font-size: var(--text-xl); font-weight: 900;
+  margin-bottom: var(--s5); color: var(--txt);
+}
+.shortcut-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2) var(--s6);
+  margin-bottom: var(--s4);
+}
+.shortcut-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--s2) 0; border-bottom: 1px solid var(--bdr);
+  font-size: var(--text-sm); color: var(--txt2);
+}
+.shortcut-row:last-child { border-bottom: none; }
+
+/* ── Notification panel ────────────────────────────────────────────────────── */
+.notif-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1590;
+  background: hsla(0,0%,0%,.4); backdrop-filter: blur(2px);
+}
+.notif-overlay.open { display: block; }
+
+#notif-panel {
+  position: fixed; top: 0; right: -360px; width: 340px; height: 100vh;
+  background: var(--bg2); border-left: 1px solid var(--bdr2);
+  z-index: 1600; display: flex; flex-direction: column;
+  box-shadow: var(--shadow-xl); backdrop-filter: blur(28px);
+  transition: right var(--dur2) var(--ease);
+}
+#notif-panel.open { right: 0; }
+.notif-panel__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--s5) var(--s5) var(--s4);
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+.notif-panel__title { font-family: var(--font-h); font-weight: 800; font-size: var(--text-lg); color: var(--txt); }
+.notif-panel__close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surf2); border: 1px solid var(--bdr);
+  color: var(--txt2); cursor: pointer; font-size: 1rem;
+  display: grid; place-content: center;
+  transition: all var(--dur) var(--spring);
+}
+.notif-panel__close:hover { background: var(--danger); color: #fff; border-color: transparent; }
+.notif-panel__list { flex: 1; overflow-y: auto; padding: var(--s3); }
 .notif-item {
-  padding: var(--s2) var(--s3); border-radius: var(--r-sm);
+  padding: var(--s3); border-radius: var(--r-sm);
   font-size: var(--text-xs); color: var(--txt2); border-bottom: 1px solid var(--bdr);
   transition: background var(--dur);
 }
@@ -1486,3 +1538,42 @@ kbd {
   #fab { bottom: var(--s4); right: var(--s4); }
   #back-to-top { bottom: var(--s4); left: var(--s4); }
 }
+
+/* ── Mini-game overlay ─────────────────────────────────────────────────────── */
+#mini-game-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3200;
+  background: hsla(0,0%,0%,.82); backdrop-filter: blur(10px);
+  place-content: center;
+}
+#mini-game-overlay.active { display: grid; }
+.mini-game-box {
+  background: var(--bg2); border: 1px solid var(--bdr2);
+  border-radius: var(--r); padding: var(--s8);
+  max-width: 400px; width: 90%; text-align: center;
+  box-shadow: var(--shadow-xl);
+  animation: modal-pop .3s var(--spring) both;
+}
+.mini-game-target {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--grad); display: grid; place-content: center;
+  font-size: 2rem; margin: var(--s4) auto; cursor: pointer;
+  transition: transform var(--dur) var(--spring), box-shadow var(--dur);
+  box-shadow: var(--glow);
+}
+.mini-game-target:hover { transform: scale(1.1); box-shadow: var(--glow-lg); }
+
+/* ── Certificate overlay ───────────────────────────────────────────────────── */
+#cert-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3200;
+  background: hsla(0,0%,0%,.82); backdrop-filter: blur(10px);
+  place-content: center;
+}
+#cert-overlay.active { display: grid; }
+
+/* ── Collaboration overlay ─────────────────────────────────────────────────── */
+#collab-overlay {
+  display: none; position: fixed; inset: 0; z-index: 3200;
+  background: hsla(0,0%,0%,.82); backdrop-filter: blur(10px);
+  place-content: center;
+}
+#collab-overlay.active { display: grid; }

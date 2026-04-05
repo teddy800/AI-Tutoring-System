@@ -487,7 +487,7 @@ function setupKeys() {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
         // Cmd+K / Ctrl+K
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openGlobalSearch(); return; }
-        if (e.key === 'Escape') { closeModal(); closeSidebar(); closeCourseModal(); closeGlobalSearch(); document.getElementById('shortcut-overlay')?.classList.remove('active'); return; }
+        if (e.key === 'Escape') { closeModal(); closeSidebar(); closeCourseModal(); closeGlobalSearch(); closeNotifPanel(); document.getElementById('shortcut-overlay')?.classList.remove('active'); document.getElementById('mini-game-overlay')?.classList.remove('active'); return; }
         if (e.key === '?') { document.getElementById('shortcut-overlay')?.classList.toggle('active'); return; }
         if (e.key === 't' || e.key === 'T') { ThemeManager.set(ThemeManager.current === 'dark' ? 'light' : ThemeManager.current === 'light' ? 'cyberpunk' : 'dark'); return; }
         if (e.key === 'm' || e.key === 'M') { toggleSidebar(); return; }
