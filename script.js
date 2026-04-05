@@ -1292,14 +1292,28 @@ function renderCourseGrid(gridId, courses, showProgress=false, filter='all') {
     });
 }
 
-function renderLeaderboard() {
+async function renderLeaderboard() {
     const list = document.getElementById('leaderboard-list');
     if (!list) return;
-    const data = [
+    let data = [
         {name:S.user||'You',pts:S.points,av:(S.user||'Y')[0].toUpperCase()},
         {name:'Alice',pts:142,av:'A'},{name:'Bob',pts:118,av:'B'},
         {name:'Carol',pts:97,av:'C'},{name:'Dave',pts:83,av:'D'}
-    ].sort((a,b) => b.pts - a.pts);
+    ];
+    try {
+        if (!S.offline) {
+            const res = await fetch(APP_CONFIG.phpBase + '?action=leaderboard&limit=10');
+            const d = await res.json();
+            if (d.success && d.leaderboard?.length) {
+                data = d.leaderboard.map(u => ({name:u.username, pts:u.points, av:u.username[0].toUpperCase()}));
+                // Ensure current user is in list
+                if (S.user && !data.find(u => u.name === S.user)) {
+                    data.push({name:S.user, pts:S.points, av:S.user[0].toUpperCase()});
+                }
+                data.sort((a,b) => b.pts - a.pts);
+            }
+        }
+    } catch {}
     const medals = ['🥇','🥈','🥉'];
     list.innerHTML = data.map((u,i) =>
         '<li style="' + (u.name===S.user?'background:hsla(var(--h1),90%,62%,.08);border-radius:var(--r-sm);':'') + '">' +
@@ -2182,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Upload
-    document.getElementById('upload-btn')?.addEventListener('click', uploadContent);
+    document.getElementById('content-upload-form')?.addEventListener('submit', uploadContent);
     document.getElementById('preview-btn')?.addEventListener('click', previewContent);
 
     // Analytics chart type

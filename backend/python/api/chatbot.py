@@ -423,7 +423,7 @@ KB = {
 
 # ── Difficulty detection ───────────────────────────────────────────────────────
 CONFUSION_SIGNALS = [
-    r"don't understand|confused|what does|what is|explain|i don't get|help me|unclear|lost"
+    r"don't understand|confused|i don't get|help me understand|unclear|i'm lost|not sure what|can you explain more"
 ]
 
 def detect_confusion(message: str) -> bool:
