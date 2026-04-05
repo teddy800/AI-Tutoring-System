@@ -4,25 +4,74 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="NeuralLearn — Next-generation AI-powered adaptive tutoring platform" />
+  <meta property="og:title" content="NeuralLearn · AI Tutoring" />
+  <meta property="og:description" content="World-class AI-powered adaptive learning platform with quizzes, courses, and real-time tutoring." />
+  <meta property="og:image" content="https://neurallearn.ai/og-image.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NeuralLearn · AI Tutoring" />
+  <meta name="twitter:description" content="AI-powered adaptive tutoring platform." />
+  <meta name="theme-color" content="#6699ff" />
+  <link rel="manifest" href="manifest.json" />
   <title>NeuralLearn · AI Tutoring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Syne:wght@700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ── Ambient layers ──────────────────────────────────────────────────── -->
+  <!-- ── Page progress bar ──────────────────────────────────────────────── -->
+  <div id="page-progress-bar" role="progressbar" aria-label="Page loading progress"></div>
+
+  <!-- ── Splash screen ──────────────────────────────────────────────────── -->
+  <div id="splash" role="status" aria-label="Loading NeuralLearn">
+    <div class="splash-logo" aria-hidden="true">⚡</div>
+    <div class="splash-title">NeuralLearn</div>
+    <div class="splash-bar"><div class="splash-bar__fill"></div></div>
+  </div>
+
+  <!-- ── Ambient layers ─────────────────────────────────────────────────── -->
   <div id="particles-js" aria-hidden="true"></div>
   <div class="aurora" aria-hidden="true">
     <div class="aurora__orb aurora__orb--1"></div>
     <div class="aurora__orb aurora__orb--2"></div>
     <div class="aurora__orb aurora__orb--3"></div>
     <div class="aurora__orb aurora__orb--4"></div>
+    <div class="aurora__orb aurora__orb--5"></div>
   </div>
   <div class="grid-overlay" aria-hidden="true"></div>
 
-  <!-- ── Floating HUD ────────────────────────────────────────────────────── -->
+  <!-- ── Confetti canvas ────────────────────────────────────────────────── -->
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- ── Network warning ────────────────────────────────────────────────── -->
+  <div id="network-warning" role="alert" aria-live="assertive">
+    <span>⚠️</span> Slow connection detected — some features may be limited.
+  </div>
+
+  <!-- ── Focus mode exit button ─────────────────────────────────────────── -->
+  <button class="focus-mode-btn" id="focus-mode-exit" aria-label="Exit focus mode">✕ Exit Focus Mode</button>
+
+  <!-- ── Floating Action Button ─────────────────────────────────────────── -->
+  <button id="fab" aria-label="Quick quiz access" title="Quick Quiz">
+    📝
+    <span class="fab-tooltip">Quick Quiz</span>
+  </button>
+
+  <!-- ── Back to top ────────────────────────────────────────────────────── -->
+  <button id="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
+
+  <!-- ── Cookie banner ──────────────────────────────────────────────────── -->
+  <div id="cookie-banner" role="banner" aria-label="Cookie consent">
+    <p class="cookie-banner__text">🍪 We use cookies to enhance your learning experience and remember your preferences.</p>
+    <div class="cookie-banner__actions">
+      <button class="btn btn--ghost btn--sm" id="cookie-decline">Decline</button>
+      <button class="btn btn--primary btn--sm" id="cookie-accept">Accept All</button>
+    </div>
+  </div>
+
+  <!-- ── HUD ────────────────────────────────────────────────────────────── -->
   <div class="hud" role="toolbar" aria-label="Quick controls">
     <button class="hud__btn theme-toggle" aria-label="Toggle theme" title="Toggle theme">🌗</button>
     <button class="hud__btn sidebar-toggle" aria-label="Open navigation" title="Menu">☰</button>
@@ -32,7 +81,7 @@
     </div>
   </div>
 
-  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <!-- ── Sidebar ────────────────────────────────────────────────────────── -->
   <div class="sidebar-overlay" aria-hidden="true"></div>
   <aside class="sidebar" role="navigation" aria-label="Main navigation">
     <div class="sidebar__top">
@@ -57,7 +106,7 @@
 
     <nav class="sidebar__nav">
       <a href="#login-form"             class="snav-item" data-icon="🔑" data-section="login-form">Login</a>
-      <a href="#dashboard"              class="snav-item" data-icon="🏠" data-section="dashboard">Dashboard</a>
+      <a href="#dashboard"              class="snav-item" data-icon="🏠" data-section="dashboard">Dashboard <span class="snav-badge">New</span></a>
       <a href="#chatbot"                class="snav-item" data-icon="🤖" data-section="chatbot">AI Chatbot</a>
       <a href="#quiz-section"           class="snav-item" data-icon="📝" data-section="quiz-section">Quizzes</a>
       <a href="#course-section"         class="snav-item" data-icon="📚" data-section="course-section">Courses</a>
@@ -66,7 +115,7 @@
       <a href="#content-repo"           class="snav-item" data-icon="🗂️" data-section="content-repo">Repository</a>
       <a href="#feedback"               class="snav-item" data-icon="💬" data-section="feedback">Feedback</a>
       <a href="#help"                   class="snav-item" data-icon="❓" data-section="help">Help</a>
-      <button class="snav-item" id="sidebar-logout" data-icon="🚪" style="background:none;border:none;cursor:pointer;color:var(--danger);width:100%;text-align:left;font-family:var(--font);font-size:.88rem;font-weight:500;display:none;">Sign Out</button>
+      <button class="snav-item" id="sidebar-logout" data-icon="🚪" style="background:none;border:none;cursor:pointer;color:var(--danger);width:100%;text-align:left;font-family:var(--font);font-size:var(--text-sm);font-weight:500;display:none;">Sign Out</button>
     </nav>
 
     <div class="sidebar__xp-bar">
@@ -78,19 +127,33 @@
     </div>
   </aside>
 
-  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <header class="header" role="banner">
+    <!-- Quick stats mini-bar -->
+    <div id="quick-stats-bar" role="complementary" aria-label="Quick stats">
+      <div class="qs-item">⭐ <strong id="qs-points">0</strong> pts</div>
+      <div class="qs-item">🔥 <strong id="qs-streak">0</strong> day streak</div>
+      <div class="qs-item">📚 <strong id="qs-courses">0</strong> courses</div>
+      <div class="qs-item">🏅 <strong id="qs-badges">0</strong> badges</div>
+    </div>
     <div class="header__inner">
       <div class="header__brand">
-        <span class="header__logo">⚡</span>
+        <span class="header__logo" aria-hidden="true">⚡</span>
         <div>
           <h1 class="header__name">NeuralLearn</h1>
           <span class="header__tagline">AI-Powered Tutoring</span>
         </div>
       </div>
+
+      <!-- Global search trigger -->
+      <button class="header-search-btn" id="header-search-btn" aria-label="Open global search (Cmd+K)">
+        🔍 Search everything…
+        <kbd>⌘K</kbd>
+      </button>
+
       <nav class="topnav" aria-label="Top navigation">
         <a href="#login-form"             class="tnav-link" data-section="login-form">Login</a>
-        <a href="#dashboard"              class="tnav-link" data-section="dashboard">Dashboard</a>
+        <a href="#dashboard"              class="tnav-link" data-section="dashboard">Dashboard <span class="nav-badge"></span></a>
         <a href="#chatbot"                class="tnav-link" data-section="chatbot">Chatbot</a>
         <a href="#quiz-section"           class="tnav-link" data-section="quiz-section">Quizzes</a>
         <a href="#course-section"         class="tnav-link" data-section="course-section">Courses</a>
@@ -100,7 +163,24 @@
         <a href="#feedback"               class="tnav-link" data-section="feedback">Feedback</a>
         <a href="#help"                   class="tnav-link" data-section="help">Help</a>
       </nav>
-      <!-- Profile dropdown (shown when logged in) -->
+
+      <!-- Theme switcher -->
+      <div class="theme-switcher" role="group" aria-label="Theme selector">
+        <button class="theme-btn active" data-theme-val="dark" aria-pressed="true">🌙 Dark</button>
+        <button class="theme-btn" data-theme-val="light" aria-pressed="false">☀️ Light</button>
+        <button class="theme-btn" data-theme-val="cyberpunk" aria-pressed="false">⚡ Cyber</button>
+      </div>
+
+      <!-- Language selector -->
+      <select class="lang-select" id="lang-select" aria-label="Select language">
+        <option value="en">🇺🇸 EN</option>
+        <option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="de">🇩🇪 DE</option>
+        <option value="ar">🇸🇦 AR</option>
+      </select>
+
+      <!-- Profile dropdown -->
       <div class="profile-dropdown" id="profile-dropdown" aria-label="User menu">
         <button class="notif-btn" id="notif-btn" aria-label="Notifications" title="Notifications">
           🔔<span class="notif-badge" id="notif-badge"></span>
@@ -117,7 +197,9 @@
             <div class="profile-menu__pts" id="menu-pts">0 pts</div>
           </div>
           <button class="profile-menu__item" onclick="showSection('dashboard')" role="menuitem">🏠 Dashboard</button>
+          <button class="profile-menu__item" onclick="showSection('analytics')" role="menuitem">📊 Analytics</button>
           <button class="profile-menu__item" onclick="showSection('feedback')" role="menuitem">💬 Feedback</button>
+          <button class="profile-menu__item" onclick="exportData()" role="menuitem">📤 Export Data</button>
           <div class="profile-menu__divider"></div>
           <button class="profile-menu__item profile-menu__item--danger" id="logout-btn" role="menuitem">🚪 Sign Out</button>
         </div>
@@ -125,21 +207,77 @@
     </div>
   </header>
 
-  <!-- ── Main ────────────────────────────────────────────────────────────── -->
-  <main class="main" id="main">
+  <!-- ── Global search overlay ──────────────────────────────────────────── -->
+  <div id="global-search-overlay" role="dialog" aria-modal="true" aria-label="Global search">
+    <div class="global-search-box">
+      <input type="search" id="global-search-input" class="global-search-input"
+        placeholder="Search courses, quizzes, topics…" autocomplete="off" aria-label="Search" />
+      <div class="global-search-results" id="global-search-results">
+        <div class="search-hint">Type to search across courses, quizzes, and repository items</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- LOGIN / SIGNUP ─────────────────────────────────────────────────── -->
+  <!-- ── Keyboard shortcut overlay ──────────────────────────────────────── -->
+  <div id="shortcut-overlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div class="shortcut-modal">
+      <h3>⌨️ Keyboard Shortcuts</h3>
+      <div class="shortcut-grid">
+        <div class="shortcut-row"><span>Open Search</span><kbd>⌘K</kbd></div>
+        <div class="shortcut-row"><span>Show Shortcuts</span><kbd>?</kbd></div>
+        <div class="shortcut-row"><span>Go to Dashboard</span><kbd>G D</kbd></div>
+        <div class="shortcut-row"><span>Go to Quizzes</span><kbd>G Q</kbd></div>
+        <div class="shortcut-row"><span>Go to Chatbot</span><kbd>G C</kbd></div>
+        <div class="shortcut-row"><span>Toggle Theme</span><kbd>T</kbd></div>
+        <div class="shortcut-row"><span>Toggle Menu</span><kbd>M</kbd></div>
+        <div class="shortcut-row"><span>Focus Mode</span><kbd>F</kbd></div>
+        <div class="shortcut-row"><span>Close / Escape</span><kbd>Esc</kbd></div>
+        <div class="shortcut-row"><span>Send Chat</span><kbd>Enter</kbd></div>
+      </div>
+      <button class="btn btn--ghost btn--sm" style="margin-top:var(--s6);width:100%" onclick="document.getElementById('shortcut-overlay').classList.remove('active')">Close</button>
+    </div>
+  </div>
+
+  <!-- ── Notification panel ─────────────────────────────────────────────── -->
+  <div class="notif-overlay" id="notif-overlay"></div>
+  <aside id="notif-panel" role="complementary" aria-label="Notifications">
+    <div class="notif-panel__header">
+      <span class="notif-panel__title">🔔 Notifications</span>
+      <button class="notif-panel__close" id="notif-panel-close" aria-label="Close notifications">✕</button>
+    </div>
+    <div class="notif-panel__list" id="notif-panel-list" aria-live="polite">
+      <p style="color:var(--txt3);font-size:var(--text-sm);text-align:center;padding:var(--s6)">No notifications yet</p>
+    </div>
+  </aside>
+
+  <!-- ── Mini game overlay ──────────────────────────────────────────────── -->
+  <div id="mini-game-overlay" role="dialog" aria-modal="true" aria-label="Reaction time game">
+    <div class="mini-game-box">
+      <h3 style="font-family:var(--font-h);font-size:var(--text-xl);font-weight:900;margin-bottom:var(--s2)">⚡ Reaction Game</h3>
+      <p style="color:var(--txt2);font-size:var(--text-sm);margin-bottom:var(--s4)" id="mini-game-msg">Click the target as fast as you can!</p>
+      <div class="mini-game-target" id="mini-game-target" role="button" tabindex="0" aria-label="Click target">🎯</div>
+      <p style="font-family:var(--font-m);font-size:var(--text-2xl);font-weight:700;color:var(--p)" id="mini-game-score">—</p>
+      <div style="display:flex;gap:var(--s3);justify-content:center;margin-top:var(--s4)">
+        <button class="btn btn--primary btn--sm" id="mini-game-start">Start</button>
+        <button class="btn btn--ghost btn--sm" onclick="document.getElementById('mini-game-overlay').classList.remove('active')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main ───────────────────────────────────────────────────────────── -->
+  <main class="main" id="main" role="main">
+
+    <!-- LOGIN / SIGNUP ──────────────────────────────────────────────────── -->
     <section id="login-form" class="page page--login active" aria-labelledby="login-h">
       <div class="login-wrap">
         <div class="login-glow" aria-hidden="true"></div>
         <div class="login-card">
           <div class="login-hero">
-            <div class="login-hero__icon">⚡</div>
+            <span class="login-hero__icon" aria-hidden="true">⚡</span>
             <h2 id="login-h" class="login-hero__title">NeuralLearn</h2>
             <p class="login-hero__sub">Your AI-powered learning companion</p>
           </div>
 
-          <!-- Tab switcher -->
           <div class="auth-tabs" role="tablist">
             <button class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="panel-login">Sign In</button>
             <button class="auth-tab" id="tab-signup" role="tab" aria-selected="false" aria-controls="panel-signup">Create Account</button>
@@ -150,30 +288,30 @@
             <form id="login-form-el" class="login-form" novalidate>
               <div class="role-picker" role="group" aria-label="Select your role">
                 <button type="button" class="role-pill active" data-role="student">🎓 Student</button>
-                <button type="button" class="role-pill" data-role="tutor">�‍🏫 Tutor</button>
+                <button type="button" class="role-pill" data-role="tutor">👨‍🏫 Tutor</button>
               </div>
               <select id="user-type" class="sr-only" aria-hidden="true">
                 <option value="student">Student</option>
                 <option value="tutor">Tutor</option>
               </select>
               <div class="field">
-                <label class="field__label" for="username">Username</label>
+                <label class="field__label" for="username">Username or Email</label>
                 <div class="field__wrap">
-                  <span class="field__icon">�</span>
+                  <span class="field__icon" aria-hidden="true">👤</span>
                   <input type="text" id="username" class="field__input" placeholder="Username or email" autocomplete="username" required />
                 </div>
               </div>
               <div class="field">
                 <label class="field__label" for="password">Password</label>
                 <div class="field__wrap">
-                  <span class="field__icon">🔒</span>
+                  <span class="field__icon" aria-hidden="true">🔒</span>
                   <input type="password" id="password" class="field__input" placeholder="Enter password" autocomplete="current-password" required />
-                  <button type="button" class="field__eye" aria-label="Toggle password">👁</button>
+                  <button type="button" class="field__eye" aria-label="Toggle password visibility">👁</button>
                 </div>
               </div>
               <button type="submit" class="btn btn--primary btn--full btn--lg">
                 <span class="btn__text">Sign In →</span>
-                <span class="btn__spin" hidden>⏳</span>
+                <span class="btn__spin" hidden aria-hidden="true">⏳</span>
               </button>
             </form>
             <p class="login-hint">No account? Click <strong>Create Account</strong> above.</p>
@@ -193,71 +331,78 @@
               <div class="field">
                 <label class="field__label" for="signup-fullname">Full Name</label>
                 <div class="field__wrap">
-                  <span class="field__icon">✏️</span>
+                  <span class="field__icon" aria-hidden="true">✏️</span>
                   <input type="text" id="signup-fullname" class="field__input" placeholder="Your full name" autocomplete="name" required />
                 </div>
               </div>
               <div class="field">
                 <label class="field__label" for="signup-username">Username</label>
                 <div class="field__wrap">
-                  <span class="field__icon">👤</span>
+                  <span class="field__icon" aria-hidden="true">👤</span>
                   <input type="text" id="signup-username" class="field__input" placeholder="Choose a username" autocomplete="username" required />
                 </div>
               </div>
               <div class="field">
                 <label class="field__label" for="signup-email">Email</label>
                 <div class="field__wrap">
-                  <span class="field__icon">📧</span>
+                  <span class="field__icon" aria-hidden="true">📧</span>
                   <input type="email" id="signup-email" class="field__input" placeholder="your@email.com" autocomplete="email" required />
                 </div>
               </div>
               <div class="field">
                 <label class="field__label" for="signup-password">Password</label>
                 <div class="field__wrap">
-                  <span class="field__icon">🔒</span>
+                  <span class="field__icon" aria-hidden="true">🔒</span>
                   <input type="password" id="signup-password" class="field__input" placeholder="Min. 6 characters" autocomplete="new-password" required minlength="6" />
-                  <button type="button" class="field__eye" data-target="signup-password" aria-label="Toggle password">👁</button>
+                  <button type="button" class="field__eye" data-target="signup-password" aria-label="Toggle password visibility">👁</button>
                 </div>
               </div>
               <div class="field">
                 <label class="field__label" for="signup-confirm">Confirm Password</label>
                 <div class="field__wrap">
-                  <span class="field__icon">🔒</span>
+                  <span class="field__icon" aria-hidden="true">🔒</span>
                   <input type="password" id="signup-confirm" class="field__input" placeholder="Repeat password" autocomplete="new-password" required />
                 </div>
               </div>
               <button type="submit" class="btn btn--primary btn--full btn--lg">
                 <span class="btn__text">Create Account ✨</span>
-                <span class="btn__spin" hidden>⏳</span>
+                <span class="btn__spin" hidden aria-hidden="true">⏳</span>
               </button>
             </form>
             <p class="login-hint">Already have an account? Click <strong>Sign In</strong> above.</p>
           </div>
-
         </div>
       </div>
     </section>
 
-    <!-- DASHBOARD ──────────────────────────────────────────────────────── -->
+    <!-- DASHBOARD ───────────────────────────────────────────────────────── -->
     <section id="dashboard" class="page" aria-labelledby="dash-h">
       <div class="page-header">
         <div>
           <h2 id="dash-h" class="page-title">Dashboard</h2>
           <p id="welcome-message" class="page-sub" aria-live="polite"></p>
         </div>
-        <div class="page-header__actions">
+        <div class="page-header__actions" style="display:flex;gap:var(--s2);flex-wrap:wrap">
           <button class="btn btn--ghost btn--sm" onclick="showSection('chatbot')">Ask AI 🤖</button>
+          <button class="btn btn--ghost btn--sm" id="study-plan-btn">📅 Study Plan</button>
+          <button class="btn btn--ghost btn--sm" id="mini-game-btn">🎮 Mini Game</button>
+          <button class="btn btn--ghost btn--sm" id="focus-mode-btn">🎯 Focus Mode</button>
         </div>
       </div>
 
-      <div class="kpi-row" role="list">
-        <div class="kpi" role="listitem"><div class="kpi__icon">⭐</div><div><span class="kpi__val" id="stat-points">0</span><span class="kpi__lbl">Points</span></div></div>
-        <div class="kpi" role="listitem"><div class="kpi__icon">🔥</div><div><span class="kpi__val" id="stat-streak">0</span><span class="kpi__lbl">Day Streak</span></div></div>
-        <div class="kpi" role="listitem"><div class="kpi__icon">📚</div><div><span class="kpi__val" id="stat-courses">0</span><span class="kpi__lbl">Courses</span></div></div>
-        <div class="kpi" role="listitem"><div class="kpi__icon">🏅</div><div><span class="kpi__val" id="stat-badges">0</span><span class="kpi__lbl">Badges</span></div></div>
-        <div class="kpi" role="listitem"><div class="kpi__icon">📈</div><div><span class="kpi__val" id="stat-level">1</span><span class="kpi__lbl">Level</span></div></div>
+      <!-- Motivational quote -->
+      <div class="motivational-quote" id="motivational-quote" aria-live="polite"></div>
+
+      <!-- KPI row -->
+      <div class="kpi-row" role="list" aria-label="Your statistics">
+        <div class="kpi" role="listitem" data-tooltip="Total points earned"><div class="kpi__icon" aria-hidden="true">⭐</div><div><span class="kpi__val" id="stat-points">0</span><span class="kpi__lbl">Points</span></div></div>
+        <div class="kpi" role="listitem" data-tooltip="Consecutive login days"><div class="kpi__icon" aria-hidden="true">🔥</div><div><span class="kpi__val" id="stat-streak">0</span><span class="kpi__lbl">Day Streak</span></div></div>
+        <div class="kpi" role="listitem" data-tooltip="Enrolled courses"><div class="kpi__icon" aria-hidden="true">📚</div><div><span class="kpi__val" id="stat-courses">0</span><span class="kpi__lbl">Courses</span></div></div>
+        <div class="kpi" role="listitem" data-tooltip="Badges earned"><div class="kpi__icon" aria-hidden="true">🏅</div><div><span class="kpi__val" id="stat-badges">0</span><span class="kpi__lbl">Badges</span></div></div>
+        <div class="kpi" role="listitem" data-tooltip="Current level"><div class="kpi__icon" aria-hidden="true">📈</div><div><span class="kpi__val" id="stat-level">1</span><span class="kpi__lbl">Level</span></div></div>
       </div>
 
+      <!-- Progress hero -->
       <div class="progress-hero">
         <div class="progress-hero__header">
           <span class="progress-hero__label">Overall Progress</span>
@@ -267,7 +412,7 @@
           <div class="progress-hero__fill" id="overall-fill"></div>
           <div class="progress-hero__glow" id="overall-glow"></div>
         </div>
-        <div class="milestones">
+        <div class="milestones" aria-hidden="true">
           <div class="ms" data-milestone="25">25%</div>
           <div class="ms" data-milestone="50">50%</div>
           <div class="ms" data-milestone="75">75%</div>
@@ -275,11 +420,59 @@
         </div>
       </div>
 
+      <!-- Dashboard grid: timer + daily challenge + calendar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s4);margin-bottom:var(--s6)">
+        <!-- Study timer -->
+        <div class="study-timer-card glass-card" aria-labelledby="timer-widget-h">
+          <h3 id="timer-widget-h" class="glass-card__title">⏱️ Study Timer</h3>
+          <div class="timer-display" id="study-timer-display">25:00</div>
+          <div class="timer-mode-badge" id="timer-mode-badge">Focus</div>
+          <div class="timer-controls">
+            <button class="btn btn--primary btn--sm" id="timer-start-btn">▶ Start</button>
+            <button class="btn btn--ghost btn--sm" id="timer-pause-btn">⏸ Pause</button>
+            <button class="btn btn--ghost btn--sm" id="timer-reset-btn">↺ Reset</button>
+          </div>
+          <p style="font-size:var(--text-xs);color:var(--txt3);margin-top:var(--s2)">Pomodoro: 25min focus / 5min break</p>
+        </div>
+
+        <!-- Daily challenge -->
+        <div class="daily-challenge-card" id="daily-challenge-card" aria-labelledby="dc-h">
+          <div class="daily-challenge-card__badge">🌟 Daily Challenge</div>
+          <p class="daily-challenge-card__q" id="dc-question">Loading today's challenge…</p>
+          <div class="daily-challenge-card__opts" id="dc-options"></div>
+          <p id="dc-result" style="font-size:var(--text-xs);color:var(--txt3);margin-top:var(--s3)" aria-live="polite"></p>
+        </div>
+
+        <!-- Study streak calendar -->
+        <div class="glass-card" aria-labelledby="cal-h">
+          <h3 id="cal-h" class="glass-card__title">📅 Study Calendar</h3>
+          <div class="streak-calendar">
+            <div class="streak-calendar__grid" id="study-calendar-grid" aria-label="30-day activity calendar"></div>
+            <div class="streak-calendar__legend">
+              <span>Less</span>
+              <div class="cal-legend-cell" style="background:var(--surf2)"></div>
+              <div class="cal-legend-cell" style="background:hsla(var(--h1),90%,62%,.25)"></div>
+              <div class="cal-legend-cell" style="background:hsla(var(--h1),90%,62%,.5)"></div>
+              <div class="cal-legend-cell" style="background:var(--p)"></div>
+              <span>More</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course filter + grid -->
       <h3 class="section-label">Your Courses</h3>
-      <div class="course-grid" id="dashboard-course-grid" role="grid"></div>
+      <div class="course-filter-bar" role="group" aria-label="Filter courses">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="Beginner">Beginner</button>
+        <button class="filter-btn" data-filter="Intermediate">Intermediate</button>
+        <button class="filter-btn" data-filter="Advanced">Advanced</button>
+      </div>
+      <div class="course-grid" id="dashboard-course-grid" role="grid" aria-label="Course grid"></div>
 
       <div id="recommendations" class="reco-bar" aria-live="polite"></div>
 
+      <!-- Bottom cards -->
       <div class="dash-bottom">
         <div class="glass-card" aria-labelledby="lb-h">
           <h3 id="lb-h" class="glass-card__title">🏆 Leaderboard</h3>
@@ -288,17 +481,19 @@
         <div class="glass-card" aria-labelledby="badges-h">
           <h3 id="badges-h" class="glass-card__title">🏅 Badges</h3>
           <div class="badges-wrap" id="badges-container">
-            <span class="badge" data-type="quiz-champion">Quiz Champion</span>
-            <span class="badge" data-type="active-learner">Active Learner</span>
-            <span class="badge" data-type="course-explorer">Course Explorer</span>
+            <span class="badge" data-type="quiz-champion" data-tooltip="Scored 80%+ on a quiz">Quiz Champion</span>
+            <span class="badge" data-type="active-learner" data-tooltip="Logged in 3+ days">Active Learner</span>
+            <span class="badge" data-type="course-explorer" data-tooltip="Enrolled in 3+ courses">Course Explorer</span>
           </div>
         </div>
         <div class="glass-card streak-card">
-          <div class="streak-flame">🔥</div>
+          <span class="streak-flame" aria-hidden="true">🔥</span>
           <p class="streak-val" id="streak-display">0 day streak</p>
           <p class="streak-sub">Keep the momentum!</p>
         </div>
       </div>
+
+      <!-- Score history -->
       <div class="glass-card" style="margin-top:var(--s4)" aria-labelledby="history-h">
         <h3 id="history-h" class="glass-card__title">📈 Recent Quiz Scores</h3>
         <div id="score-history-list" class="score-history"></div>
@@ -317,26 +512,28 @@
       <div class="chat-shell">
         <div class="chat-header-row">
           <span class="chat-header-row__title">🤖 AI Tutor Chat</span>
-          <button class="chat-clear-btn" id="chat-clear-btn" aria-label="Clear chat">🗑 Clear</button>
+          <div class="chat-actions">
+            <button class="chat-clear-btn" id="chat-export-btn" aria-label="Export chat">📤 Export</button>
+            <button class="chat-clear-btn" id="chat-tts-btn" aria-label="Text to speech">🔊 TTS</button>
+            <button class="chat-clear-btn" id="chat-clear-btn" aria-label="Clear chat">🗑 Clear</button>
+          </div>
         </div>
         <div class="chat-msgs" id="chat-container" role="log" aria-live="polite" aria-label="Chat messages">
           <div class="msg msg--ai">
-            <div class="msg__av">🤖</div>
+            <div class="msg__av" aria-hidden="true">🤖</div>
             <div>
-              <div class="msg__bubble">Hello! I'm your AI tutor. Ask me anything about Python, Calculus, Web Dev, Machine Learning, or any topic you're studying! 🎓</div>
+              <div class="msg__bubble">Hello! I'm your AI tutor. Ask me anything about Python, Calculus, Web Dev, Machine Learning, Docker, Git, SQL, React, TypeScript, or any topic you're studying! 🎓</div>
+              <div class="msg__time">Now</div>
             </div>
           </div>
         </div>
-          <div class="msg msg--ai">
-            <div class="msg__av">🤖</div>
-            <div class="msg__bubble">Hello! I'm your AI tutor. Ask me anything about Python, Calculus, Web Dev, or any topic you're studying! 🎓</div>
-          </div>
-        </div>
-        <div class="chat-chips" id="chat-suggestions">
+        <div class="chat-chips" id="chat-suggestions" aria-label="Quick questions">
           <button class="chip" data-msg="What is Python?">What is Python?</button>
-          <button class="chip" data-msg="Explain derivatives">Explain derivatives</button>
-          <button class="chip" data-msg="How does HTML work?">How does HTML work?</button>
-          <button class="chip" data-msg="What is machine learning?">What is ML?</button>
+          <button class="chip" data-msg="Explain derivatives">Derivatives</button>
+          <button class="chip" data-msg="How does React work?">React</button>
+          <button class="chip" data-msg="What is Docker?">Docker</button>
+          <button class="chip" data-msg="Explain SQL joins">SQL Joins</button>
+          <button class="chip" data-msg="What is TypeScript?">TypeScript</button>
         </div>
         <div class="chat-bar">
           <button class="hud__btn voice-btn" aria-label="Voice input" title="Voice input">🎤</button>
@@ -351,11 +548,11 @@
       <div class="page-header">
         <div>
           <h2 id="quiz-h" class="page-title">📝 Quizzes</h2>
-          <p class="page-sub">Test your knowledge</p>
+          <p class="page-sub">Test your knowledge and earn points</p>
         </div>
         <div class="quiz-hud">
           <div class="timer-ring" id="timer-ring" aria-live="assertive" aria-label="Time remaining">
-            <svg viewBox="0 0 44 44" class="timer-svg">
+            <svg viewBox="0 0 44 44" class="timer-svg" aria-hidden="true">
               <circle class="timer-bg" cx="22" cy="22" r="18"/>
               <circle class="timer-arc" id="timer-arc" cx="22" cy="22" r="18"/>
             </svg>
@@ -366,9 +563,19 @@
           </div>
         </div>
       </div>
+      <!-- Quiz filter bar -->
+      <div class="quiz-filter-bar" role="group" aria-label="Filter quizzes">
+        <button class="filter-btn active" data-quiz-filter="all">All Topics</button>
+        <button class="filter-btn" data-quiz-filter="Python">Python</button>
+        <button class="filter-btn" data-quiz-filter="Calculus">Calculus</button>
+        <button class="filter-btn" data-quiz-filter="Web Dev">Web Dev</button>
+        <button class="filter-btn" data-quiz-filter="Algorithms">Algorithms</button>
+        <button class="filter-btn" data-quiz-filter="Databases">Databases</button>
+      </div>
       <form id="quiz-content" novalidate>
         <div id="quiz-questions"></div>
         <div class="quiz-footer">
+          <button type="button" class="btn btn--ghost btn--sm" id="quiz-review-btn" hidden>📋 Review Answers</button>
           <button type="submit" class="btn btn--primary btn--lg">Submit Quiz ✓</button>
         </div>
       </form>
@@ -383,7 +590,13 @@
         </div>
         <input type="search" id="course-search" class="search-input" placeholder="Search courses…" aria-label="Search courses" />
       </div>
-      <div class="course-grid" id="course-grid" role="grid"></div>
+      <div class="course-filter-bar" role="group" aria-label="Filter by difficulty">
+        <button class="filter-btn active" data-course-filter="all">All</button>
+        <button class="filter-btn" data-course-filter="Beginner">Beginner</button>
+        <button class="filter-btn" data-course-filter="Intermediate">Intermediate</button>
+        <button class="filter-btn" data-course-filter="Advanced">Advanced</button>
+      </div>
+      <div class="course-grid" id="course-grid" role="grid" aria-label="Available courses"></div>
       <div id="course-details" class="course-details"></div>
     </section>
 
@@ -394,13 +607,22 @@
       </div>
       <div class="upload-grid">
         <form id="content-upload-form" class="upload-form" novalidate>
+          <!-- File type selector -->
+          <div>
+            <label class="field__label">File Type</label>
+            <div class="file-type-selector" role="group" aria-label="Select file type">
+              <button type="button" class="file-type-btn active" data-ext=".txt">.txt</button>
+              <button type="button" class="file-type-btn" data-ext=".md">.md</button>
+              <button type="button" class="file-type-btn" data-ext=".pdf">.pdf</button>
+            </div>
+          </div>
           <div class="dropzone" id="dropzone" role="region" aria-label="File drop zone" tabindex="0">
             <div class="dropzone__inner">
-              <span class="dropzone__icon">📂</span>
-              <p class="dropzone__title">Drop a <code>.txt</code> file here</p>
-              <p class="dropzone__sub">or click to browse</p>
+              <span class="dropzone__icon" aria-hidden="true">📂</span>
+              <p class="dropzone__title">Drop a file here</p>
+              <p class="dropzone__sub">or click to browse — <code>.txt</code> <code>.md</code> <code>.pdf</code></p>
             </div>
-            <input type="file" id="file-input" accept=".txt" class="sr-only" aria-label="Upload file" />
+            <input type="file" id="file-input" accept=".txt,.md,.pdf" class="sr-only" aria-label="Upload file" />
           </div>
           <div class="field">
             <label class="field__label" for="content-title">Title</label>
@@ -408,7 +630,7 @@
           </div>
           <div class="field">
             <label class="field__label" for="content-body">Content</label>
-            <textarea id="content-body" class="field__input field__textarea" rows="7" placeholder="Paste or type content…" required></textarea>
+            <textarea id="content-body" class="field__input field__textarea" rows="7" placeholder="Paste or type content… Markdown supported!" required></textarea>
             <span class="char-count" id="char-count">0 characters</span>
           </div>
           <div class="upload-actions">
@@ -417,7 +639,7 @@
           </div>
         </form>
         <div class="glass-card" id="content-preview" hidden>
-          <h4 class="glass-card__title">Preview</h4>
+          <h4 class="glass-card__title">Rich Preview</h4>
           <div id="content-preview-body" class="preview-body"></div>
         </div>
       </div>
@@ -428,9 +650,9 @@
       <div class="page-header">
         <div>
           <h2 id="analytics-h" class="page-title">📊 Analytics</h2>
-          <p class="page-sub">Student performance insights</p>
+          <p class="page-sub">Performance insights and trends</p>
         </div>
-        <div class="chart-switcher">
+        <div class="chart-switcher" role="group" aria-label="Chart type">
           <button class="btn btn--ghost btn--sm chart-type-btn active" data-type="bar">Bar</button>
           <button class="btn btn--ghost btn--sm chart-type-btn" data-type="line">Line</button>
           <button class="btn btn--ghost btn--sm chart-type-btn" data-type="radar">Radar</button>
@@ -440,7 +662,7 @@
       <div class="analytics-layout">
         <div class="glass-card chart-card">
           <h3 class="glass-card__title">Student Progress</h3>
-          <div class="chart-box"><canvas id="progress-chart" aria-label="Student progress chart"></canvas></div>
+          <div class="chart-box"><canvas id="progress-chart" aria-label="Student progress chart" role="img"></canvas></div>
         </div>
         <div class="analytics-side">
           <div class="glass-card">
@@ -449,9 +671,19 @@
           </div>
           <div class="glass-card">
             <h3 class="glass-card__title">Activity Heatmap</h3>
-            <div id="heatmap" class="heatmap"></div>
+            <div id="heatmap" class="heatmap" aria-label="Activity heatmap"></div>
           </div>
         </div>
+      </div>
+      <!-- Top performers -->
+      <div class="glass-card" style="margin-top:var(--s4)" aria-labelledby="top-performers-h">
+        <h3 id="top-performers-h" class="glass-card__title">🏆 Top Performers</h3>
+        <div class="top-performers" id="top-performers-list"></div>
+      </div>
+      <!-- AI Insights -->
+      <div class="glass-card" style="margin-top:var(--s4)" aria-labelledby="insights-h">
+        <h3 id="insights-h" class="glass-card__title">🧠 AI Insights</h3>
+        <div id="ai-insights" style="color:var(--txt2);font-size:var(--text-sm);line-height:1.7" aria-live="polite"></div>
       </div>
     </section>
 
@@ -464,7 +696,7 @@
         </div>
         <input type="search" id="repo-search" class="search-input" placeholder="Search content…" aria-label="Search repository" />
       </div>
-      <div class="repo-grid" id="repo-grid" role="list"></div>
+      <div class="repo-grid" id="repo-grid" role="list" aria-label="Repository items"></div>
     </section>
 
     <!-- FEEDBACK ────────────────────────────────────────────────────────── -->
@@ -476,7 +708,7 @@
         <form class="glass-card feedback-form" id="feedback-form-el" novalidate>
           <div class="field">
             <label class="field__label">Type</label>
-            <div class="type-pills" role="group">
+            <div class="type-pills" role="group" aria-label="Feedback type">
               <button type="button" class="type-pill active" data-type="bug">🐛 Bug</button>
               <button type="button" class="type-pill" data-type="feature">💡 Feature</button>
               <button type="button" class="type-pill" data-type="general">💬 General</button>
@@ -502,6 +734,15 @@
             </div>
           </div>
           <button type="submit" class="btn btn--primary">Submit Feedback 🚀</button>
+          <!-- Social share -->
+          <div style="margin-top:var(--s4)">
+            <p style="font-size:var(--text-xs);color:var(--txt3);margin-bottom:var(--s2)">Share your experience:</p>
+            <div class="social-row">
+              <button type="button" class="share-btn" data-platform="twitter">𝕏 Twitter</button>
+              <button type="button" class="share-btn" data-platform="linkedin">💼 LinkedIn</button>
+              <button type="button" class="share-btn" data-platform="copy">📋 Copy Link</button>
+            </div>
+          </div>
         </form>
         <div class="glass-card feedback-contact">
           <h3 class="glass-card__title">📬 Contact</h3>
@@ -515,6 +756,8 @@
             <a href="#" class="social-btn" aria-label="GitHub">⌥</a>
             <a href="#" class="social-btn" aria-label="Discord">◈</a>
           </div>
+          <!-- Report a bug floating button -->
+          <button class="btn btn--danger btn--sm" style="margin-top:var(--s4);width:100%" id="report-bug-btn">🐛 Report a Bug</button>
         </div>
       </div>
     </section>
@@ -527,20 +770,26 @@
       <div class="help-layout">
         <div class="glass-card">
           <h3 class="glass-card__title">Frequently Asked Questions</h3>
-          <details class="faq"><summary>How do I reset my password?</summary><p>Use the Feedback form or email support@neurallearn.ai.</p></details>
-          <details class="faq"><summary>How do I access course materials?</summary><p>Navigate to Courses, select a course, and browse the syllabus.</p></details>
-          <details class="faq"><summary>How does the AI chatbot work?</summary><p>It uses NLP to answer questions about your courses and topics.</p></details>
-          <details class="faq"><summary>How are points and badges earned?</summary><p>Complete quizzes, post in forums, upload content, and submit feedback.</p></details>
+          <details class="faq"><summary>How do I reset my password?</summary><p>Use the Feedback form or email support@neurallearn.ai. We'll send a reset link within minutes.</p></details>
+          <details class="faq"><summary>How do I access course materials?</summary><p>Navigate to Courses, select a course, and browse the syllabus. Click Enroll to get started.</p></details>
+          <details class="faq"><summary>How does the AI chatbot work?</summary><p>It uses NLP to answer questions about your courses and topics. Ask anything — it knows Python, Calculus, Web Dev, ML, Docker, Git, SQL, and more!</p></details>
+          <details class="faq"><summary>How are points and badges earned?</summary><p>Complete quizzes, enroll in courses, upload content, and submit feedback to earn points and unlock badges.</p></details>
           <details class="faq"><summary>Can I use NeuralLearn offline?</summary><p>Yes! Actions are queued and synced automatically when you reconnect.</p></details>
+          <details class="faq"><summary>What is the Pomodoro timer?</summary><p>The study timer uses the Pomodoro technique: 25 minutes of focused study followed by a 5-minute break.</p></details>
         </div>
         <div class="help-side">
           <div class="glass-card">
             <h3 class="glass-card__title">⌨️ Shortcuts</h3>
             <ul class="shortcut-list">
+              <li><kbd>⌘K</kbd> Global search</li>
+              <li><kbd>?</kbd> Show shortcuts</li>
+              <li><kbd>G D</kbd> Dashboard</li>
+              <li><kbd>G Q</kbd> Quizzes</li>
               <li><kbd>Enter</kbd> Send chat</li>
               <li><kbd>Esc</kbd> Close modal</li>
               <li><kbd>T</kbd> Toggle theme</li>
               <li><kbd>M</kbd> Toggle menu</li>
+              <li><kbd>F</kbd> Focus mode</li>
             </ul>
           </div>
           <div class="glass-card">
@@ -551,6 +800,7 @@
               <li>Take a quiz to earn points</li>
               <li>Ask the AI tutor anything</li>
               <li>Track progress in Analytics</li>
+              <li>Use the study timer for focus</li>
             </ol>
           </div>
         </div>
@@ -559,47 +809,58 @@
 
   </main>
 
-  <!-- ── Course Modal ──────────────────────────────────────────────────────── -->
+  <!-- ── Course Modal ────────────────────────────────────────────────────── -->
   <div id="course-modal-veil" class="course-modal-veil" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="course-modal-title">
     <div class="course-modal" id="course-modal">
-      <button class="course-modal__close" id="course-modal-close" aria-label="Close">✕</button>
-      <span class="course-modal__emoji" id="course-modal-emoji">📚</span>
+      <button class="course-modal__close" id="course-modal-close" aria-label="Close course details">✕</button>
+      <span class="course-modal__emoji" id="course-modal-emoji" aria-hidden="true">📚</span>
       <h2 class="course-modal__title" id="course-modal-title">Course</h2>
       <p class="course-modal__desc" id="course-modal-desc"></p>
-      <div class="course-modal__section" id="course-modal-syllabus-wrap">
+      <div class="course-modal__section">
         <h4>Syllabus</h4>
         <ul class="course-modal__list" id="course-modal-syllabus"></ul>
       </div>
-      <div class="course-modal__section" id="course-modal-assign-wrap">
+      <div class="course-modal__section">
         <h4>Assignments</h4>
         <ul class="course-modal__list" id="course-modal-assignments"></ul>
       </div>
-      <button class="btn btn--primary enroll-btn" id="course-enroll-btn">✅ Enroll in Course</button>
+      <button class="btn btn--primary enroll-btn" id="course-enroll-btn">🎓 Enroll in Course</button>
     </div>
   </div>
 
-  <!-- ── Modal ───────────────────────────────────────────────────────────── -->
+  <!-- ── General Modal ──────────────────────────────────────────────────── -->
   <div id="modal" class="modal-veil" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-msg">
     <div class="modal-box">
-      <div class="modal-box__icon" id="modal-icon">ℹ️</div>
+      <div class="modal-box__icon" id="modal-icon" aria-hidden="true">ℹ️</div>
       <p id="modal-msg" class="modal-box__msg"></p>
       <button class="btn btn--primary" id="modal-close">Got it</button>
     </div>
   </div>
 
-  <!-- ── Level-up overlay ─────────────────────────────────────────────────── -->
-  <div id="levelup-overlay" class="levelup-overlay" aria-hidden="true">
+  <!-- ── Level-up overlay ───────────────────────────────────────────────── -->
+  <div id="levelup-overlay" class="levelup-overlay" aria-hidden="true" role="status">
     <div class="levelup-box">
-      <div class="levelup-icon">⚡</div>
+      <span class="levelup-icon" aria-hidden="true">⚡</span>
       <h2 class="levelup-title">Level Up!</h2>
-      <p class="levelup-sub" id="levelup-sub">You reached Level 2</p>
+      <p class="levelup-sub" id="levelup-sub">You reached Level 2!</p>
     </div>
   </div>
 
-  <!-- ── Toast container ─────────────────────────────────────────────────── -->
-  <div id="toast-container" aria-live="assertive" aria-atomic="false"></div>
+  <!-- ── Toast container ────────────────────────────────────────────────── -->
+  <div id="toast-container" aria-live="assertive" aria-atomic="false" role="region" aria-label="Notifications"></div>
 
-  <!-- ── Scripts ─────────────────────────────────────────────────────────── -->
+  <!-- ── Course card template ───────────────────────────────────────────── -->
+  <template id="course-card-template">
+    <div class="course-card" role="gridcell" tabindex="0">
+      <span class="course-card__emoji"></span>
+      <h3></h3>
+      <p></p>
+      <div class="prog-label"></div>
+      <div class="prog-bar"><div class="prog-fill"></div></div>
+    </div>
+  </template>
+
+  <!-- ── Scripts ────────────────────────────────────────────────────────── -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
