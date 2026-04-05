@@ -59,10 +59,11 @@ function checkRateLimit(string $ip): bool {
 // ── Database connection (optional) ────────────────────────────────────────────
 function getDb(): ?mysqli {
     $db = @new mysqli(
-        $_ENV['DB_HOST']     ?? 'localhost',
+        $_ENV['DB_HOST']     ?? '127.0.0.1',
         $_ENV['DB_USER']     ?? 'root',
         $_ENV['DB_PASSWORD'] ?? '',
-        $_ENV['DB_NAME']     ?? 'tutoring_system'
+        $_ENV['DB_NAME']     ?? 'tutoring_system',
+        (int)($_ENV['DB_PORT'] ?? 3307)
     );
     if ($db->connect_error) return null;
     $db->set_charset('utf8mb4');
