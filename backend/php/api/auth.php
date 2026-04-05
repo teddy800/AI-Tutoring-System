@@ -309,3 +309,26 @@ function handleChangePassword(\mysqli $db): void {
         echo json_encode(['success' => false, 'error' => 'Failed to change password']);
     }
 }
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+function handleLeaderboard(\mysqli $db): void {
+    $limit = min((int)($_GET['limit'] ?? 10), 50);
+    $stmt = $db->prepare(
+        'SELECT username, points, streak, user_type FROM users ORDER BY points DESC LIMIT ?'
+    );
+    $stmt->bind_param('i', $limit);
+    $stmt->execute();
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    echo json_encode([
+        'success' => true,
+        'leaderboard' => array_map(fn($r, $i) => [
+            'rank'      => $i + 1,
+            'username'  => $r['username'],
+            'points'    => (int)$r['points'],
+            'streak'    => (int)$r['streak'],
+            'user_type' => $r['user_type'],
+        ], $rows, array_keys($rows))
+    ]);
+}

@@ -89,6 +89,26 @@ switch ($action) {
         handleFeedback($db);
         break;
 
+    case 'get-profile':
+        handleGetProfile($db);
+        break;
+
+    case 'update-profile':
+        handleUpdateProfile($db);
+        break;
+
+    case 'change-password':
+        handleChangePassword($db);
+        break;
+
+    case 'leaderboard':
+        handleLeaderboard($db);
+        break;
+
+    case 'health':
+        echo json_encode(['success' => true, 'status' => 'ok', 'timestamp' => time()]);
+        break;
+
     default:
         http_response_code(404);
         echo json_encode(['success' => false, 'error' => 'Unknown action']);
