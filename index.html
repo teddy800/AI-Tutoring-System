@@ -299,6 +299,10 @@
           <p class="streak-sub">Keep the momentum!</p>
         </div>
       </div>
+      <div class="glass-card" style="margin-top:var(--s4)" aria-labelledby="history-h">
+        <h3 id="history-h" class="glass-card__title">📈 Recent Quiz Scores</h3>
+        <div id="score-history-list" class="score-history"></div>
+      </div>
     </section>
 
     <!-- CHATBOT ─────────────────────────────────────────────────────────── -->
@@ -311,7 +315,18 @@
         <span class="online-badge" id="user-status" aria-live="polite">● Online</span>
       </div>
       <div class="chat-shell">
+        <div class="chat-header-row">
+          <span class="chat-header-row__title">🤖 AI Tutor Chat</span>
+          <button class="chat-clear-btn" id="chat-clear-btn" aria-label="Clear chat">🗑 Clear</button>
+        </div>
         <div class="chat-msgs" id="chat-container" role="log" aria-live="polite" aria-label="Chat messages">
+          <div class="msg msg--ai">
+            <div class="msg__av">🤖</div>
+            <div>
+              <div class="msg__bubble">Hello! I'm your AI tutor. Ask me anything about Python, Calculus, Web Dev, Machine Learning, or any topic you're studying! 🎓</div>
+            </div>
+          </div>
+        </div>
           <div class="msg msg--ai">
             <div class="msg__av">🤖</div>
             <div class="msg__bubble">Hello! I'm your AI tutor. Ask me anything about Python, Calculus, Web Dev, or any topic you're studying! 🎓</div>
